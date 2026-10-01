@@ -9,7 +9,8 @@ const ink = '#22303f', mut = '#7b8a99', acc = '#2f8fa3', accs = '#e2f2f5';
 // Go template: $es is true when the person used the app in Spanish; missing lang falls back to English
 const head = '{{ $es := false }}{{ with .Data.lang }}{{ if eq . "es" }}{{ $es = true }}{{ end }}{{ end }}';
 const t = (en, es) => `{{ if $es }}${es}{{ else }}${en}{{ end }}`;
-const name = '{{ with .Data.name }} {{ . }}{{ end }}';
+// short name ("Francisco G.") saved at sign-up, falling back to the full name; never wraps
+const name = '{{ with .Data.short }} <span style="white-space:nowrap">{{ . }}</span>{{ else }}{{ with .Data.name }} <span style="white-space:nowrap">{{ . }}</span>{{ end }}{{ end }}';
 
 function email({ title, intro, button, foot }) {
   return `${head}<!doctype html>

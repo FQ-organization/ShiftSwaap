@@ -42,7 +42,7 @@ w('\n-- demo accounts (the on_auth_user_created trigger creates their profiles)'
 const users = ORDER.map((k, i) => ({ id: uid(k), email: email(k), name: P[k][0], year: P[k][1], avatar: i }));
 w(`insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change)
 select '00000000-0000-0000-0000-000000000000', (u->>'id')::uuid, 'authenticated', 'authenticated', u->>'email', extensions.crypt(${lit(PASSWORD)}, extensions.gen_salt('bf')), now(),
-  '{"provider":"email","providers":["email"]}', jsonb_build_object('name', u->>'name', 'year', u->>'year'), now(), now(), '', '', '', ''
+  '{"provider":"email","providers":["email"]}', jsonb_build_object('name', u->>'name', 'lang', 'en'), now(), now(), '', '', '', ''
 from jsonb_array_elements(${lit(JSON.stringify(users))}::jsonb) u;`);
 w(`insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 select gen_random_uuid(), id, id::text, jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true), 'email', now(), now(), now()
@@ -51,17 +51,25 @@ w(`update public.profiles p set avatar = (u->>'avatar')::int from jsonb_array_el
 
 const rooms = [
   { key: 'em', name: 'Emergency Medicine', icon: '🚑', bg: '#dff0ff', type: 'Emergency 24h', members: ORDER, admins: ['M'], shifts: makeS(), by: 'M', welcome: 'Welcome! Post shift changes here and colleagues who can help will be notified 👋',
-    rules: [['Junior + Senior Coverage', 'require', null, null, [{ min: 1, in: ['R1', 'R2'] }, { min: 1, in: ['R3', 'R4'] }]], ['Minimum staffing', 'staff', 2, null, null], ['Minimum rest', 'rest', null, 11, null]] },
+    rules: [['Junior + Senior Coverage', [[1, ['R1', 'R2']], [1, ['R3', 'R4']]]], ['Minimum staffing', [[2, []]]], ['Minimum rest', 11]] },
   { key: 'icu', name: 'Intensive Care', icon: '🫀', bg: '#ffe4ec', type: 'ICU 24h', members: ['M', 'J', 'T', 'A', 'B'], admins: ['J'], shifts: icuShifts(), by: 'J', welcome: 'Welcome to ICU scheduling 💙',
-    rules: [['Senior supervision', 'require', null, null, [{ min: 1, in: ['R3', 'R4'] }]], ['Minimum staffing', 'staff', 2, null, null], ['Minimum rest', 'rest', null, 11, null]] }];
+    rules: [['Senior supervision', [[1, ['R3', 'R4']]]], ['Minimum staffing', [[2, []]]], ['Minimum rest', 11]] }];
 
 for (const r of rooms) {
   const rid = roomId[r.key];
   w(`\n-- room: ${r.name}`);
   w(`insert into public.rooms (id, name, icon, bg, shift_type, created_by) values (${lit(rid)}, ${lit(r.name)}, ${lit(r.icon)}, ${lit(r.bg)}, ${lit(r.type)}, ${lit(uid(r.by))});`);
   w(`insert into public.room_members (room_id, user_id, is_admin) values\n${r.members.map(k => `(${lit(rid)}, ${lit(uid(k))}, ${r.admins.includes(k)})`).join(',\n')};`);
-  r.rules.forEach(([name, type, nn, h, req], i) =>
-    w(`insert into public.rules (room_id, name, type, n, h, req, created_at) values (${lit(rid)}, ${lit(name)}, ${lit(type)}, ${nn ?? 'null'}, ${h ?? 'null'}, ${req ? lit(JSON.stringify(req)) + '::jsonb' : 'null'}, now() + interval '${i} seconds');`));
+  // the demo's residency years are ordinary room tags; rules are conditions on them
+  const years = [...new Set(r.members.map(k => P[k][1]))].sort();
+  w(`insert into public.room_tags (room_id, name, color) values\n${years.map(y => `(${lit(rid)}, ${lit(y)}, ${lit(y < 'R3' ? '#fff0e1' : '#e8edff')})`).join(',\n')};`);
+  w(`insert into public.member_tags (room_id, user_id, tag_id)
+select ${lit(rid)}, (x->>0)::uuid, t.id from jsonb_array_elements(${lit(JSON.stringify(r.members.map(k => [uid(k), P[k][1]])))}::jsonb) x
+join public.room_tags t on t.room_id = ${lit(rid)} and t.name = x->>1;`);
+  const tagIds = names => names.length ? `(select coalesce(jsonb_agg(id), '[]'::jsonb) from public.room_tags where room_id = ${lit(rid)} and name in (${names.map(lit).join(', ')}))` : `'[]'::jsonb`;
+  r.rules.forEach(([name, spec], i) => w(typeof spec == 'number'
+    ? `insert into public.room_rules (room_id, name, type, h, created_at) values (${lit(rid)}, ${lit(name)}, 'rest', ${spec}, now() + interval '${i} seconds');`
+    : `insert into public.room_rules (room_id, name, type, conds, created_at) values (${lit(rid)}, ${lit(name)}, 'shift', jsonb_build_array(${spec.map(([n, names]) => `jsonb_build_object('op', 'min', 'n', ${n}, 'tags', ${tagIds(names)})`).join(', ')}), now() + interval '${i} seconds');`));
   w(`insert into public.messages (room_id, user_id, text, tr) values (${lit(rid)}, ${lit(uid(r.by))}, ${lit(r.welcome)}, true);`);
   // compact form: [day, [member numbers]]; member n is user ...8000-00000000000n
   const data = r.shifts.map(s => [new Date(s.start).toISOString().slice(0, 10), s.m.map(k => ORDER.indexOf(k) + 1)]);

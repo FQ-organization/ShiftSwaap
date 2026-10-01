@@ -1,6 +1,6 @@
-# ShiftSwap
+# ShiftSwaap
 
-Swap hospital shifts without the chaos. The whole app is `index.html`. It needs no build step, so any static host can serve it.
+Swap shifts without the chaos: in a hospital, a restaurant, a fire station or any team that runs on a rota. The whole app is `index.html`. It needs no build step, so any static host can serve it.
 
 ## Tenants
 
@@ -13,7 +13,7 @@ Swap hospital shifts without the chaos. The whole app is `index.html`. It needs 
 ### How the page picks a tenant
 
 1. A `?env=dev`, `?env=prod` or `?env=local` URL parameter always wins.
-2. Otherwise, `localhost`, `127.0.0.1`, `file://` and any host with `dev` or `staging` in its name (for example `dev.shiftswap.app`) use **dev**.
+2. Otherwise, `localhost`, `127.0.0.1`, `file://` and any host with `dev` or `staging` in its name (for example `dev.shiftswaap.app`) use **dev**.
 3. Every other host uses **prod**.
 
 Pages outside prod show a small orange `DEV` or `LOCAL DEMO` badge. Prod hides all demo features: the demo logins, the "Acting as" switcher, the demo clock, the scenario buttons and the developer dashboard.
@@ -22,18 +22,32 @@ The URLs and publishable keys are in the `TENANTS` block at the top of the scrip
 
 ### Demo accounts (dev only)
 
-Every demo account uses the password `demo1234`:
+Every demo account uses the password `demo1234`. The demo rooms use the tags R1–R4 (residency years), but they're ordinary tags that admins can rename or replace:
 `francisco@`, `ana@`, `beatriz@`, `diogo@`, `ines@`, `maria@`, `joao@`, `andre@`, `rita@` and `tiago@hospitalcentral.example`.
 Maria is the admin of Emergency Medicine and João is the admin of Intensive Care.
 
+## Rooms, tags and rules
+
+Each room's admins create **tags** that describe its people (role, level, skill, team…), give them to members, and build **rules** from them:
+
+| Rule | Example |
+|---|---|
+| Who must be on each shift: one or more conditions, all required | at least 1 *Senior* **and** at most 2 *Trainee* |
+| Rest between shifts, for people with chosen tags (or everyone) | *Drivers*: at least 11 hours |
+| Maximum shifts per week or month, for people with chosen tags (or everyone) | Everyone: at most 5 per week |
+
+A condition with no tags counts anyone. A person's tags belong to the room, not to their account, so the same person can be *Senior* in one room and have no tags in another. A tag can't be deleted while a rule uses it.
+
 ## Database
 
-- `supabase/migrations/20261001000000_init_schema.sql`: the schema, RLS policies, realtime setup and server functions. It's already applied to both tenants. Apply any future migration to **both**.
+- `supabase/migrations/`: the schema, RLS policies, realtime setup and server functions. Every file is already applied to both tenants. Apply any future migration to **both**.
+  - `20261002000000_room_tags_and_generic_rules.sql` adds `room_tags`, `member_tags` and `room_rules`, and converts the old rules and residency years. It only adds things: the old `rules` table and the `profiles.year` column stay in place, unused. To remove them, run this once per project in the SQL editor:
+    `drop table public.rules; alter table public.profiles drop column year;`
 - `supabase/seed/gen-dev-seed.mjs` generates `supabase/seed/dev_seed.sql` from the same generators the local demo uses. **Never run the seed against prod.**
 
 What the database enforces:
 - People only see rooms they belong to. Contact details (`profile_private`) are visible only to their owner.
-- Only admins can change rules, room settings and invites, or assign other people to shifts.
+- Only admins can change rules, tags, who has which tag, room settings and invites, or assign other people to shifts.
 - Shifts change hands only through `apply_swap()`. It checks that the caller owns the request (or is an admin, in approval mode) and that the offer moves only the owner and the offerer.
 - Text that the app renders as HTML (names, room names, notifications, system lines) can't contain markup.
 
@@ -43,10 +57,11 @@ Not enforced by the database yet: the scheduling rules themselves (minimum staff
 
 These settings aren't reachable through the API I used, so they need to be set by hand, per project:
 
-1. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation emails, magic links and Google/Facebook sign-in send people back there. Until then, they land on `http://localhost:3000`.
-2. **Authentication → Sign In / Providers**: enable Google and Facebook with your OAuth client IDs if you want those buttons to work. Email and password works already.
-3. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
-4. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
+1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `magic_link.html` into **Magic link**. Suggested subjects: `Confirm your ShiftSwaap account` and `Your ShiftSwaap sign-in link`. The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
+2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation emails, magic links and Google/Facebook sign-in send people back there. Until then, they land on `http://localhost:3000`.
+3. **Authentication → Sign In / Providers**: enable Google and Facebook with your OAuth client IDs if you want those buttons to work. Email and password works already.
+4. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
+5. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
 
 ## Deploy
 

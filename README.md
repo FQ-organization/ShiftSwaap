@@ -40,6 +40,8 @@ A condition with no tags counts anyone. A person's tags belong to the room, not 
 
 New rooms start without rules. Admins rename the room and pick its icon in **Settings → Room**.
 
+**Reports** (Settings → Reports, admins only): pick a month and get the shifts, hours worked, requests, swaps, shifts taken as is, sales (count and €), still open and cancelled, plus a line per person. Download it as a CSV spreadsheet or print / save it as PDF. A month covers the shifts that start in it. On dev and prod, `room_report()` computes it on the server and refuses anyone who isn't an admin of the room.
+
 Whoever creates a room is its first admin. Admins can make other members admins, or remove admins, in **Settings → People**. A room always keeps at least one admin.
 
 ## Developer dashboard (owner only)

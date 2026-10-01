@@ -7,6 +7,8 @@ import { writeFileSync } from 'node:fs';
 const F = "Nunito,'Segoe UI',Helvetica,Arial,sans-serif";
 const ink = '#22303f', mut = '#7b8a99', acc = '#2f8fa3', accs = '#e2f2f5';
 // Go template: $es is true when the person used the app in Spanish; missing lang falls back to English
+// the app icon, served by the deployed site (email clients don't show inline SVG)
+const LOGO = 'https://fq-organization.github.io/ShiftSwaap/icons/icon-192.png';
 const head = '{{ $es := false }}{{ with .Data.lang }}{{ if eq . "es" }}{{ $es = true }}{{ end }}{{ end }}';
 const t = (en, es) => `{{ if $es }}${es}{{ else }}${en}{{ end }}`;
 // short name ("Francisco G.") saved at sign-up, falling back to the full name; never wraps
@@ -22,7 +24,7 @@ function email({ title, intro, button, foot }) {
 <tr><td align="center" style="padding:40px 16px">
  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px">
   <tr><td align="center" style="padding-bottom:22px">
-   <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="60" height="60" align="center" valign="middle" style="width:60px;height:60px;background:${acc};border-radius:20px;color:#ffffff;font:800 28px/60px ${F};box-shadow:0 10px 24px rgba(47,143,163,.3)">&#8644;</td></tr></table>
+   <img src="${LOGO}" width="64" height="64" alt="Swapecito" style="display:block;width:64px;height:64px;border:0;border-radius:20px">
    <div style="font:800 24px/1.2 ${F};color:${ink};margin-top:12px;letter-spacing:-.01em">Swapecito</div>
    <div style="font:600 14px/1.4 ${F};color:${mut};margin-top:2px">${t('Swap shifts without the chaos.', 'Cambia turnos sin el caos.')}</div>
   </td></tr>

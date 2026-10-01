@@ -87,9 +87,13 @@ These settings aren't reachable through the API I used, so they need to be set b
 4. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
 5. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
 
+## App icon
+
+`icons/icon.svg` is the source. `icons/icon-full.svg` (iPhone) and `icons/icon-maskable.svg` (Android, which may crop to a circle) are the same drawing on a full square background. The PNGs (`favicon-32`, `apple-touch-icon` 180 px, `icon-192`, `icon-512`, `icon-maskable-512`) are exported from them. `manifest.webmanifest` makes the site installable on a phone's home screen. The login screen draws the icon inline, and the emails load `icon-192.png` from the deployed site.
+
 ## Deploy
 
-`.github/workflows/pages.yml` publishes `index.html` to GitHub Pages on every push to `claude/awesome-babbage-fegeqy`. The `supabase/` folder isn't deployed.
+`.github/workflows/pages.yml` publishes `index.html`, `manifest.webmanifest` and `icons/` to GitHub Pages on every push to `claude/awesome-babbage-fegeqy`. The `supabase/` folder isn't deployed.
 
 - Prod: https://fq-organization.github.io/ShiftSwaap/
 - Dev on the same deploy: https://fq-organization.github.io/ShiftSwaap/?env=dev

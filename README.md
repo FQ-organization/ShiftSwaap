@@ -38,6 +38,20 @@ Each room's admins create **tags** that describe its people (role, level, skill,
 
 A condition with no tags counts anyone. A person's tags belong to the room, not to their account, so the same person can be *Senior* in one room and have no tags in another. A tag can't be deleted while a rule uses it.
 
+## Developer dashboard (owner only)
+
+Usage metrics: active users, sessions, sign-ups, requests, swaps, messages, the exchange funnel and per-room counts. The app records counts only, never message text. Only accounts on a tenant's `app_admins` list can open the dashboard, and the database enforces this too:
+- `app_events` can only be read by owners, and `dev_rooms()` refuses everyone else.
+- The `app_admins` list itself can't be read through the API at all.
+- An account counts as owner only if its email is on the list **and confirmed**, so registering someone else's address gets you nothing.
+
+The button is in **Profile & settings**, and only owners see it. Local demo mode has no dashboard. The owner emails are kept in the database, not in this public repo. To add or remove an owner, run this in each project's SQL editor:
+
+```sql
+insert into public.app_admins (email) values ('you@example.com');   -- add (lowercase)
+delete from public.app_admins where email = 'you@example.com';      -- remove
+```
+
 ## Database
 
 - `supabase/migrations/`: the schema, RLS policies, realtime setup and server functions. Every file is already applied to both tenants. Apply any future migration to **both**.

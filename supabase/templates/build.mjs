@@ -65,6 +65,14 @@ const files = {
     foot: t("Someone asked to sign in to Swapecito as {{ .Email }}. If that wasn't you, you can ignore this email.",
             'Alguien pidió entrar en Swapecito como {{ .Email }}. Si no fuiste tú, puedes ignorar este correo.'),
   }),
+  'recovery.html': email({
+    title: t(`Reset your password${name}`, `Restablece tu contraseña${name}`),
+    intro: t('Tap the button to choose a new password for your Swapecito account. The link works once and expires in 1 hour.',
+             'Toca el botón para elegir una contraseña nueva para tu cuenta de Swapecito. El enlace funciona una sola vez y caduca en 1 hora.'),
+    button: t('Choose a new password', 'Elegir contraseña nueva'),
+    foot: t("Someone asked to reset the password for {{ .Email }}. If that wasn't you, ignore this email: your password stays the same.",
+            'Alguien pidió restablecer la contraseña de {{ .Email }}. Si no fuiste tú, ignora este correo: tu contraseña no cambia.'),
+  }),
 };
 const dir = new URL('.', import.meta.url);
 for (const [f, html] of Object.entries(files)) writeFileSync(new URL(f, dir), html);

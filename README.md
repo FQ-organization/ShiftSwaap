@@ -82,10 +82,17 @@ Not enforced by the database yet: the scheduling rules themselves (minimum staff
 
 These settings aren't reachable through the API I used, so they need to be set by hand, per project:
 
-1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup**. Suggested subject: `Confirm your Swapecito account`. (`magic_link.html` is kept for later; the app no longer offers magic-link sign-in.) The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
-2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation emails send people back there. Until then, they land on `http://localhost:3000`.
+1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `recovery.html` into **Reset password**. Suggested subjects: `Confirm your Swapecito account` and `Reset your Swapecito password`. (`magic_link.html` is kept for later; the app no longer offers magic-link sign-in.) The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
+2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation and password-reset emails send people back there, so the reset link only works for addresses listed there. Until then, they land on `http://localhost:3000`.
 3. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
 4. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
+
+## Accounts and passwords
+
+- Passwords need at least 10 characters, with letters and a number. The app checks this on sign-up, reset and change. Set the same minimum on the server (Authentication → Providers → Email → password requirements), because the API can be called without the app. Existing passwords, like the dev demo accounts' `demo1234`, keep working.
+- **Forgot password?** on the sign-in screen emails a link (`resetPasswordForEmail`). The link opens **Choose a new password**. The confirmation looks the same whether or not the email has an account.
+- **Profile → Password** changes it after checking the current password. Both flows can sign out every other device.
+- The Supabase library is a fixed copy in `vendor/` (`supabase-js` 2.117.2, checked against npm's published checksum). It's served with the site and loaded with a `sha384` integrity hash, so a modified file is refused. To update: `npm pack @supabase/supabase-js@<version>`, copy `package/dist/umd/supabase.js` to `vendor/supabase-js-<version>.js`, then update the `<script>` tag's file name and its `integrity` (`openssl dgst -sha384 -binary FILE | openssl base64 -A`).
 
 ## App icon
 
@@ -93,7 +100,7 @@ These settings aren't reachable through the API I used, so they need to be set b
 
 ## Deploy
 
-`.github/workflows/pages.yml` publishes `index.html`, `manifest.webmanifest` and `icons/` to GitHub Pages on every push to `claude/awesome-babbage-fegeqy`. The `supabase/` folder isn't deployed.
+`.github/workflows/pages.yml` publishes `index.html`, `manifest.webmanifest`, `icons/` and `vendor/` to GitHub Pages on every push to `claude/awesome-babbage-fegeqy`. The `supabase/` folder isn't deployed.
 
 - Prod: https://fq-organization.github.io/ShiftSwaap/
 - Dev on the same deploy: https://fq-organization.github.io/ShiftSwaap/?env=dev

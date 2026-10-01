@@ -40,7 +40,8 @@ Each room's admins create **tags** that describe its people (role, level, skill,
 
 A condition with no tags counts anyone. A person's tags belong to the room, not to their account, so the same person can be *Senior* in one room and have no tags in another. A tag can't be deleted while a rule uses it.
 
-New rooms start without rules. Admins rename the room and pick its icon in **Settings → Room**.
+New rooms start without rules. Admins rename the room and pick its icon in **Settings → Room**, where they can also **delete** it after typing its name. Deleting sets `rooms.deleted_at`: every access check treats the room as gone, its invite links are revoked and the other members get a notification. The rows stay in the database, so the project owner can restore a room from the SQL editor:
+`update public.rooms set deleted_at = null, deleted_by = null where name = '…';` (revoked invite links stay revoked).
 
 **Reports** (Settings → Reports, admins only): pick a month and get the shifts, hours worked, requests, swaps, shifts taken as is, sales (count and €), still open and cancelled, plus a line per person. Download it as a CSV spreadsheet or print / save it as PDF. A month covers the shifts that start in it. On dev and prod, `room_report()` computes it on the server and refuses anyone who isn't an admin of the room.
 

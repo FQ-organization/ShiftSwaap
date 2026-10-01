@@ -98,4 +98,13 @@ These settings aren't reachable through the API I used, so they need to be set b
 - Prod: https://fq-organization.github.io/ShiftSwaap/
 - Dev on the same deploy: https://fq-organization.github.io/ShiftSwaap/?env=dev
 
+### Custom domain (swapecito.com)
+
+1. **DNS, at the domain registrar.** For `swapecito.com`, add four `A` records pointing to `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153`. Optionally add four `AAAA` records too: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`. For `www`, add a `CNAME` pointing to `fq-organization.github.io`. Delete any other `A`/`CNAME` records for those names (for example the registrar's parking page).
+2. **GitHub → repo Settings → Pages → Custom domain:** enter `swapecito.com` and save. Once the DNS check passes, tick **Enforce HTTPS**; the certificate can take up to an hour. No `CNAME` file is needed, because this repo deploys with Actions. `www.swapecito.com` and the old `github.io` address then redirect to `swapecito.com`.
+3. **Recommended: verify the domain** under GitHub organization **Settings → Pages → Add a domain**, with the `TXT` record it shows. That stops anyone else's GitHub Pages site from claiming it.
+4. **Supabase, both projects → Authentication → URL Configuration:** set the Site URL to `https://swapecito.com` and add `https://swapecito.com/**` to the Redirect URLs, so confirmation emails, magic links and Google/Facebook sign-in come back to the new address.
+
+Prod is then `https://swapecito.com` and dev is `https://swapecito.com/?env=dev`.
+
 One-time setup: make the repo public (**Settings → General → Danger Zone**), then under **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.

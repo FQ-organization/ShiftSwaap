@@ -82,11 +82,10 @@ Not enforced by the database yet: the scheduling rules themselves (minimum staff
 
 These settings aren't reachable through the API I used, so they need to be set by hand, per project:
 
-1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `magic_link.html` into **Magic link**. Suggested subjects: `Confirm your Swapecito account` and `Your Swapecito sign-in link`. The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
-2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation emails, magic links and Google/Facebook sign-in send people back there. Until then, they land on `http://localhost:3000`.
-3. **Authentication → Sign In / Providers**: enable Google and Facebook with your OAuth client IDs if you want those buttons to work. Email and password works already.
-4. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
-5. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
+1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup**. Suggested subject: `Confirm your Swapecito account`. (`magic_link.html` is kept for later; the app no longer offers magic-link sign-in.) The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
+2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation emails send people back there. Until then, they land on `http://localhost:3000`.
+3. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
+4. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
 
 ## App icon
 
@@ -104,7 +103,7 @@ These settings aren't reachable through the API I used, so they need to be set b
 1. **DNS, at the domain registrar.** For `swapecito.com`, add four `A` records pointing to `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153`. Optionally add four `AAAA` records too: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`. For `www`, add a `CNAME` pointing to `fq-organization.github.io`. Delete any other `A`/`CNAME` records for those names (for example the registrar's parking page).
 2. **GitHub → repo Settings → Pages → Custom domain:** enter `swapecito.com` and save. Once the DNS check passes, tick **Enforce HTTPS**; the certificate can take up to an hour. No `CNAME` file is needed, because this repo deploys with Actions. `www.swapecito.com` and the old `github.io` address then redirect to `swapecito.com`.
 3. **Recommended: verify the domain** under GitHub organization **Settings → Pages → Add a domain**, with the `TXT` record it shows. That stops anyone else's GitHub Pages site from claiming it.
-4. **Supabase, both projects → Authentication → URL Configuration:** set the Site URL to `https://swapecito.com` and add `https://swapecito.com/**` to the Redirect URLs, so confirmation emails, magic links and Google/Facebook sign-in come back to the new address.
+4. **Supabase, both projects → Authentication → URL Configuration:** set the Site URL to `https://swapecito.com` and add `https://swapecito.com/**` to the Redirect URLs, so confirmation emails come back to the new address.
 
 Prod is then `https://swapecito.com` and dev is `https://swapecito.com/?env=dev`.
 

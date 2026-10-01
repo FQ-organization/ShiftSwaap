@@ -503,8 +503,8 @@ function renderLogin(){const reg=auth.mode=='up';
  <label class="fld">Password<input id="ap" type="password" autocomplete="${reg?'new-password':'current-password'}" value="${esc(auth.pw)}" oninput="auth.pw=this.value" onkeydown="if(event.key=='Enter')doAuth()"></label>
  
  ${auth.err?`<div class="why">${auth.err}</div>`:''}<button class="pill" style="width:100%;margin-top:14px" onclick="doAuth()">${reg?'Create account':'Sign in'}</button>
- ${reg?'':`<div style="text-align:center;margin-top:8px"><button class="link" onclick="magic()">Email me a magic link instead</button></div>`}</div>
- <div class="orline"><span>or</span></div><button class="soc g" onclick="startOauth('google')">${GL}Continue with Google</button><button class="soc f" onclick="startOauth('facebook')">${FBI}Continue with Facebook</button>
+ </div>
+ 
  ${DEMO?demoBlock():''}</div>`+(toast?`<div class="toast" role="status">${toast}</div>`:'');paint(h)}
 const invUrl=t=>LIVE?here().replace(/[?&]join=[^&]*/,'')+(here().includes('?')?'&':'?')+'join='+t:'join.swapecito.example/'+t;
 function genInvite(){if(!ADMINS.includes(U))return;const a=new Uint8Array(8);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<8;i++)a[i]=Math.random()*255}

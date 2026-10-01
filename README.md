@@ -38,6 +38,8 @@ Each room's admins create **tags** that describe its people (role, level, skill,
 
 A condition with no tags counts anyone. A person's tags belong to the room, not to their account, so the same person can be *Senior* in one room and have no tags in another. A tag can't be deleted while a rule uses it.
 
+New rooms start without rules. Admins rename the room and pick its icon in **Settings → Room**.
+
 Whoever creates a room is its first admin. Admins can make other members admins, or remove admins, in **Settings → People**. A room always keeps at least one admin.
 
 ## Developer dashboard (owner only)

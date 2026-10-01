@@ -1,4 +1,6 @@
-# ShiftSwaap
+# Swapecito
+
+The GitHub repository and the site address keep the old name, `ShiftSwaap`.
 
 Swap shifts without the chaos: in a hospital, a restaurant, a fire station or any team that runs on a rota. The whole app is `index.html`. It needs no build step, so any static host can serve it.
 
@@ -13,7 +15,7 @@ Swap shifts without the chaos: in a hospital, a restaurant, a fire station or an
 ### How the page picks a tenant
 
 1. A `?env=dev`, `?env=prod` or `?env=local` URL parameter always wins.
-2. Otherwise, `localhost`, `127.0.0.1`, `file://` and any host with `dev` or `staging` in its name (for example `dev.shiftswaap.app`) use **dev**.
+2. Otherwise, `localhost`, `127.0.0.1`, `file://` and any host with `dev` or `staging` in its name (for example `dev.swapecito.app`) use **dev**.
 3. Every other host uses **prod**.
 
 Pages outside prod show a small orange `DEV` or `LOCAL DEMO` badge. Prod hides all demo features: the demo logins, the "Acting as" switcher, the demo clock, the scenario buttons and the developer dashboard.
@@ -79,7 +81,7 @@ Not enforced by the database yet: the scheduling rules themselves (minimum staff
 
 These settings aren't reachable through the API I used, so they need to be set by hand, per project:
 
-1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `magic_link.html` into **Magic link**. Suggested subjects: `Confirm your ShiftSwaap account` and `Your ShiftSwaap sign-in link`. The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
+1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `magic_link.html` into **Magic link**. Suggested subjects: `Confirm your Swapecito account` and `Your Swapecito sign-in link`. The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
 2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation emails, magic links and Google/Facebook sign-in send people back there. Until then, they land on `http://localhost:3000`.
 3. **Authentication → Sign In / Providers**: enable Google and Facebook with your OAuth client IDs if you want those buttons to work. Email and password works already.
 4. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.

@@ -1,4 +1,4 @@
-# Working on ShiftSwaap
+# Working on Swapecito (repository: ShiftSwaap)
 
 - The app is the single file `index.html`; the database lives in `supabase/` (see README.md for tenants, migrations and setup).
 - Apply every new migration to both Supabase projects: dev `byiisadweulvkfuuopra` and prod `wgpgnyapmyvysowdcyvh`.

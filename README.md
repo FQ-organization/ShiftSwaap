@@ -47,3 +47,12 @@ These settings aren't reachable through the API I used, so they need to be set b
 2. **Authentication → Sign In / Providers**: enable Google and Facebook with your OAuth client IDs if you want those buttons to work. Email and password works already.
 3. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
 4. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
+
+## Deploy
+
+`.github/workflows/pages.yml` publishes `index.html` to GitHub Pages on every push to `claude/awesome-babbage-fegeqy`. The `supabase/` folder isn't deployed.
+
+- Prod: https://fq-organization.github.io/ShiftSwaap/
+- Dev on the same deploy: https://fq-organization.github.io/ShiftSwaap/?env=dev
+
+One-time setup: make the repo public (**Settings → General → Danger Zone**), then under **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.

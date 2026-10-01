@@ -58,7 +58,7 @@ const rooms = [
 for (const r of rooms) {
   const rid = roomId[r.key];
   w(`\n-- room: ${r.name}`);
-  w(`insert into public.rooms (id, name, icon, bg, shift_type, created_by) values (${lit(rid)}, ${lit(r.name)}, ${lit(r.icon)}, ${lit(r.bg)}, ${lit(r.type)}, ${lit(uid(r.by))});`);
+  w(`insert into public.rooms (id, name, icon, bg, shift_type, created_by, tz) values (${lit(rid)}, ${lit(r.name)}, ${lit(r.icon)}, ${lit(r.bg)}, ${lit(r.type)}, ${lit(uid(r.by))}, 'Europe/Lisbon');`);
   w(`insert into public.room_members (room_id, user_id, is_admin) values\n${r.members.map(k => `(${lit(rid)}, ${lit(uid(k))}, ${r.admins.includes(k)})`).join(',\n')};`);
   // the demo's residency years are ordinary room tags; rules are conditions on them
   const years = [...new Set(r.members.map(k => P[k][1]))].sort();
@@ -71,17 +71,17 @@ join public.room_tags t on t.room_id = ${lit(rid)} and t.name = x->>1;`);
     ? `insert into public.room_rules (room_id, name, type, h, created_at) values (${lit(rid)}, ${lit(name)}, 'rest', ${spec}, now() + interval '${i} seconds');`
     : `insert into public.room_rules (room_id, name, type, conds, created_at) values (${lit(rid)}, ${lit(name)}, 'shift', jsonb_build_array(${spec.map(([n, names]) => `jsonb_build_object('op', 'min', 'n', ${n}, 'tags', ${tagIds(names)})`).join(', ')}), now() + interval '${i} seconds');`));
   w(`insert into public.messages (room_id, user_id, text, tr) values (${lit(rid)}, ${lit(uid(r.by))}, ${lit(r.welcome)}, true);`);
-  // compact form: [day, [member numbers]]; member n is user ...8000-00000000000n
+  // compact form: [day, [member numbers]]; member n is user ...8000-00000000000n. Shifts run 08:00 to 08:00 Lisbon time.
   const data = r.shifts.map(s => [new Date(s.start).toISOString().slice(0, 10), s.m.map(k => ORDER.indexOf(k) + 1)]);
   w(`with src as (
   select (e->>0)::date + time '08:00' as day, e->1 as m from jsonb_array_elements(${lit(JSON.stringify(data))}::jsonb) e),
 ins as (
   insert into public.shifts (room_id, starts_at, ends_at, shift_type)
-  select ${lit(rid)}, day at time zone 'UTC', (day at time zone 'UTC') + interval '24 hours', ${lit(r.type)} from src
+  select ${lit(rid)}, day at time zone 'Europe/Lisbon', (day + interval '1 day') at time zone 'Europe/Lisbon', ${lit(r.type)} from src
   returning id, starts_at)
 insert into public.shift_members (shift_id, room_id, user_id, pos)
 select ins.id, ${lit(rid)}, ('00000000-0000-4000-8000-' || lpad(x.v, 12, '0'))::uuid, (x.o - 1)::smallint
-from ins join src on ins.starts_at = src.day at time zone 'UTC'
+from ins join src on ins.starts_at = src.day at time zone 'Europe/Lisbon'
 cross join lateral jsonb_array_elements_text(src.m) with ordinality x(v, o);`);
 }
 w('\ncommit;');

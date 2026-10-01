@@ -40,6 +40,8 @@ Each room's admins create **tags** that describe its people (role, level, skill,
 
 A condition with no tags counts anyone. A person's tags belong to the room, not to their account, so the same person can be *Senior* in one room and have no tags in another. A tag can't be deleted while a rule uses it.
 
+**Time zone.** Each room has one (`rooms.tz`). Shifts run 08:00 to 08:00 in it, and so do "today", past days, the weeks and months that rules count, and report months. Everyone sees the room's dates, wherever they are, and the app adds a note such as "Lisbon time" when the room's zone differs from the viewer's. New rooms take their creator's time zone. Admins change it in **Settings → Room**. `set_room_tz()` then moves every upcoming shift so it keeps its day and start time in the new zone. Shifts that have started don't move. The rooms that existed before time zones were added are set to `Europe/Lisbon`.
+
 New rooms start without rules. Admins rename the room and pick its icon in **Settings → Room**, where they can also **delete** it after typing its name. Deleting sets `rooms.deleted_at`: every access check treats the room as gone, its invite links are revoked and the other members get a notification. The rows stay in the database, so the project owner can restore a room from the SQL editor:
 `update public.rooms set deleted_at = null, deleted_by = null where name = '…';` (revoked invite links stay revoked).
 
@@ -77,7 +79,9 @@ What the database enforces:
 - Text that the app renders as HTML (names, room names, notifications, system lines) can't contain markup.
 - Shifts that have started are locked: nobody can join, leave, add, edit or delete them, request or offer them, or approve a swap that involves one (`20261009000000_past_shifts_are_locked.sql`). In the calendar, today is circled and past days are greyed out.
 
-Not enforced by the database yet: the scheduling rules themselves (minimum staffing, junior + senior coverage, rest hours, monthly maximum). The app checks them before every swap or added shift, but a hand-crafted API call could skip those checks. Moving them into `apply_swap()` is the next hardening step.
+- The room's rules (`20261010000000_rules_on_server_and_room_time_zones.sql`). `private.rule_violations()` evaluates them the same way the app does: who must be on each shift, rest hours, maximum per week or month, and no overlapping shifts. A change is refused only if it adds a violation that wasn't already there, so a schedule that already breaks a rule doesn't freeze the room.
+  - `apply_swap()` refuses any swap, sale or giveaway that adds a violation.
+  - A member who adds themselves to a shift can't break their own rest, maximum or overlap rules. Admins can still assign anyone: the app shows them the broken rule and asks them to confirm the override.
 
 ## Setup still needed in the Supabase dashboard
 

@@ -75,6 +75,7 @@ What the database enforces:
 - Only admins can change rules, tags, who has which tag, room settings and invites, or assign other people to shifts.
 - Shifts change hands only through `apply_swap()`. It checks that the caller owns the request (or is an admin, in approval mode) and that the offer moves only the owner and the offerer.
 - Text that the app renders as HTML (names, room names, notifications, system lines) can't contain markup.
+- Shifts that have started are locked: nobody can join, leave, add, edit or delete them, request or offer them, or approve a swap that involves one (`20261009000000_past_shifts_are_locked.sql`). In the calendar, today is circled and past days are greyed out.
 
 Not enforced by the database yet: the scheduling rules themselves (minimum staffing, junior + senior coverage, rest hours, monthly maximum). The app checks them before every swap or added shift, but a hand-crafted API call could skip those checks. Moving them into `apply_swap()` is the next hardening step.
 

@@ -28,6 +28,10 @@ Every demo account uses the password `demo1234`. The demo rooms use the tags R1�
 `francisco@`, `ana@`, `beatriz@`, `diogo@`, `ines@`, `maria@`, `joao@`, `andre@`, `rita@` and `tiago@hospitalcentral.example`.
 Maria is the admin of Emergency Medicine and João is the admin of Intensive Care.
 
+## Languages
+
+English, Spanish and Portuguese (Portugal). **System** (the default) follows the browser's language. People can pick another in **Profile & settings → Language**. Pages are written in English and translated as they render: `ES`/`PT` hold whole texts, `ES_RX`/`PT_RX` hold texts with names or numbers, and `SENT`/`PT_SENT` hold sentences inside longer messages, all keyed by the English text. `tx(en, es, pt)` is for text that's built in code. Without a `pt` argument, the Portuguese comes from `PT`.
+
 ## Rooms, tags and rules
 
 Each room's admins create **tags** that describe its people (role, level, skill, team…), give them to members, and build **rules** from them:
@@ -87,7 +91,7 @@ What the database enforces:
 
 These settings aren't reachable through the API I used, so they need to be set by hand, per project:
 
-1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `recovery.html` into **Reset password**. Suggested subjects: `Confirm your Swapecito account` and `Reset your Swapecito password`. (`magic_link.html` is kept for later; the app no longer offers magic-link sign-in.) The emails greet people by name and switch to Spanish when they signed up in Spanish. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
+1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `recovery.html` into **Reset password**. Suggested subjects: `Confirm your Swapecito account` and `Reset your Swapecito password`. (`magic_link.html` is kept for later; the app no longer offers magic-link sign-in.) The emails greet people by name and switch to Spanish or Portuguese when the person signed up in that language. Templates pasted before Portuguese was added only know English and Spanish, so paste them again. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
 2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation and password-reset emails send people back there, so the reset link only works for addresses listed there. Until then, they land on `http://localhost:3000`.
 3. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
 4. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.

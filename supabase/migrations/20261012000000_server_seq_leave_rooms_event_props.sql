@@ -373,8 +373,7 @@ revoke all on function private.event_ok(text, jsonb) from public, anon;
 grant execute on function private.event_props_ok(jsonb) to authenticated;
 grant execute on function private.event_ok(text, jsonb) to authenticated;
 
-drop policy "people record their own usage" on public.app_events;
-create policy "people record their own usage" on public.app_events for insert to authenticated
+alter policy "people record their own usage" on public.app_events
   with check (user_id = (select auth.uid()) and (room_id is null or private.is_member(room_id)) and private.event_ok(name, props));
 
 -- events already stored with other props keep their count, not their props

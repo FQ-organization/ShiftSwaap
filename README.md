@@ -42,7 +42,7 @@ Each room's admins create **tags** that describe its people (role, level, skill,
 | Rest between shifts, for people with chosen tags (or everyone) | *Drivers*: at least 11 hours |
 | Maximum shifts per week or month, for people with chosen tags (or everyone) | Everyone: at most 5 per week |
 
-A condition with no tags counts anyone. A person's tags belong to the room, not to their account, so the same person can be *Senior* in one room and have no tags in another. A tag can't be deleted while a rule uses it.
+A condition with no tags counts anyone. A shift is complete only when all its "at least" and "exactly" conditions hold; until then it waits for teammates and members can join it. Its own members can leave it with **Remove me** only if that adds no violation and worsens none except the headcount shortfall it already has (the app checks this; the database lets anyone leave). A person's tags belong to the room, not to their account, so the same person can be *Senior* in one room and have no tags in another. A tag can't be deleted while a rule uses it.
 
 **Time zone.** Each room has one (`rooms.tz`). Shifts run 08:00 to 08:00 in it, and so do "today", past days, the weeks and months that rules count, and report months. Everyone sees the room's dates, wherever they are, and the app adds a note such as "Lisbon time" when the room's zone differs from the viewer's. New rooms take their creator's time zone. Admins change it in **Settings → Room**. `set_room_tz()` then moves every upcoming shift so it keeps its day and start time in the new zone. Shifts that have started don't move. The rooms that existed before time zones were added are set to `Europe/Lisbon`.
 
@@ -52,6 +52,8 @@ New rooms start without rules. Admins rename the room and pick its icon in **Set
 **Reports** (Settings → Reports, admins only): pick a month and get the shifts, hours worked, requests, swaps, shifts taken as is, sales (count and €), still open and cancelled, plus a line per person. Download it as a CSV spreadsheet or print / save it as PDF. A month covers the shifts that start in it. On dev and prod, `room_report()` computes it on the server and refuses anyone who isn't an admin of the room.
 
 Whoever creates a room is its first admin. Admins can make other members admins, or remove admins, in **Settings → People**. A room always keeps at least one admin.
+
+Members leave a room in **Settings → Leave room**, once they've given their upcoming shifts to someone else. The last admin can't leave. Admins remove someone in **Settings → People → Remove from room**: that takes the person off upcoming shifts (started ones stay), cancels their open requests and offers, revokes the invite links they created and notifies them. To come back they need a link made after the removal: older links, whoever made them, don't let them in (`room_removals`). The admins are notified when someone leaves.
 
 ## Developer dashboard (owner only)
 
@@ -83,9 +85,10 @@ What the database enforces:
 - Text that the app renders as HTML (names, room names, notifications, system lines) can't contain markup.
 - Shifts that have started are locked: nobody can join, leave, add, edit or delete them, request or offer them, or approve a swap that involves one (`20261009000000_past_shifts_are_locked.sql`). In the calendar, today is circled and past days are greyed out.
 
-- The room's rules (`20261010000000_rules_on_server_and_room_time_zones.sql`). `private.rule_violations()` evaluates them the same way the app does: who must be on each shift, rest hours, maximum per week or month, and no overlapping shifts. A change is refused only if it adds a violation that wasn't already there, so a schedule that already breaks a rule doesn't freeze the room.
-  - `apply_swap()` refuses any swap, sale or giveaway that adds a violation.
-  - A member who adds themselves to a shift can't break their own rest, maximum or overlap rules. Admins can still assign anyone: the app shows them the broken rule and asks them to confirm the override.
+- The room's rules (`20261010000000_rules_on_server_and_room_time_zones.sql`). `private.rule_violations()` evaluates them the same way the app does: who must be on each shift, rest hours, maximum per week or month, and no overlapping shifts. A change is refused if it adds a violation or makes one worse (more shifts over a maximum, a bigger shortfall or excess on a shift, less rest, more overlap). Changes that keep or reduce a violation are allowed, so a schedule that already breaks a rule doesn't freeze the room (`20261011000000_rules_refuse_worse_violations.sql`).
+  - `apply_swap()` refuses any swap, sale or giveaway that adds or worsens a violation.
+  - A member who adds themselves to a shift can't add or worsen a violation: their rest, maximum or overlap, or the shift's "at most" / "exactly" conditions. A shift stays incomplete, and open to join, until every "at least" / "exactly" condition (tagged or not) is met. Admins can still assign anyone: the app shows them the broken rule and asks them to confirm the override.
+- The server numbers the feed (`messages.seq`, `requests.seq`) and stamps `created_at` on messages, requests, activity and usage events, whatever the client sends. `leave_room()` and `remove_member()` take the room's row lock (`for no key update`, so it doesn't block inserts that reference the room), like `set_room_admin()`, so a room always keeps an admin. `join_room()` refuses someone removed from the room when the link is older than the removal. Usage events only accept the app's event names and props keys and types (`20261012000000_server_seq_leave_rooms_event_props.sql`).
 
 ## Setup still needed in the Supabase dashboard
 

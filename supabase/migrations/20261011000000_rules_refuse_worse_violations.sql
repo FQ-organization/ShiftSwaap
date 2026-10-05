@@ -8,10 +8,9 @@
 --   max:     shifts over the maximum
 -- Changes that keep or reduce violations are still allowed, so a schedule that already breaks a rule doesn't freeze.
 
--- the return type gains sev, so the function is dropped and created again (new_violations and check_join call it by name)
-drop function private.rule_violations(uuid, jsonb);
-
-create function private.rule_violations(p_room uuid, p_changes jsonb default '[]')
+-- rule_violations_sev is rule_violations plus sev. It is a new function, so nothing is dropped; new_violations and
+-- check_join switch to it, and the old rule_violations stays in place, unused.
+create or replace function private.rule_violations_sev(p_room uuid, p_changes jsonb default '[]')
 returns table (k text, kind text, user_id uuid, msg text, sev numeric)
 language sql stable security definer set search_path = '' as $$
   with
@@ -78,14 +77,14 @@ language sql stable security definer set search_path = '' as $$
     format('%s: %s would work %s shifts in one %s (maximum %s).', b.rname, pp.nm, b.cnt, b.per, b.n), (b.cnt - b.n)::numeric
   from buckets b join people pp on pp.user_id = b.user_id where b.cnt > b.n
 $$;
-revoke all on function private.rule_violations(uuid, jsonb) from public, anon;
+revoke all on function private.rule_violations_sev(uuid, jsonb) from public, anon;
 
 -- the violations a change would add or make worse
 create or replace function private.new_violations(p_room uuid, p_changes jsonb)
 returns table (k text, kind text, user_id uuid, msg text)
 language sql stable security definer set search_path = '' as $$
-  with b as materialized (select v.k, v.sev from private.rule_violations(p_room, '[]') v)
-  select a.k, a.kind, a.user_id, a.msg from private.rule_violations(p_room, p_changes) a
+  with b as materialized (select v.k, v.sev from private.rule_violations_sev(p_room, '[]') v)
+  select a.k, a.kind, a.user_id, a.msg from private.rule_violations_sev(p_room, p_changes) a
   left join b on b.k = a.k
   where b.k is null or a.sev > b.sev
 $$;
@@ -98,8 +97,8 @@ language plpgsql security definer set search_path = '' as $$
 declare v_msg text;
 begin
   if auth.uid() is null or private.is_admin(new.room_id) then return null; end if;
-  select a.msg into v_msg from private.rule_violations(new.room_id, '[]') a
-    left join private.rule_violations(new.room_id,
+  select a.msg into v_msg from private.rule_violations_sev(new.room_id, '[]') a
+    left join private.rule_violations_sev(new.room_id,
                 jsonb_build_array(jsonb_build_object('sid', new.shift_id, 'out', new.user_id))) b on b.k = a.k
   where b.k is null or a.sev > b.sev
   limit 1;

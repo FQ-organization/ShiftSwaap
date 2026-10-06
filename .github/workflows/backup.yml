@@ -1,0 +1,62 @@
+name: Back up the prod database
+
+# Weekly encrypted copy of the prod database, kept 30 days as a workflow artifact. The repo is public, so the dump is
+# encrypted before upload (AES-256, with BACKUP_PASSPHRASE); without the passphrase the file is useless.
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_PROD_DB_URL  the prod connection string (Supabase → Connect → Session pooler), password included
+#   BACKUP_PASSPHRASE     a long random passphrase; keep a copy somewhere safe, it's needed to restore
+# Restore: download the artifact, then
+#   gpg --decrypt swapecito-prod-<date>.sql.gz.gpg | gunzip | psql "<target database url>"
+# Until both secrets exist the job does nothing.
+
+on:
+  schedule:
+    - cron: '17 3 * * 1'   # Mondays 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash   # with pipefail: a failed pg_dump fails the job instead of uploading an empty file
+    env:
+      DB_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+      PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check the secrets
+        id: cfg
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "SUPABASE_PROD_DB_URL or BACKUP_PASSPHRASE is not set: skipping the backup."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install pg_dump matching the server
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          major=$(psql "$DB_URL" -tAc 'show server_version_num' | cut -c1-2)
+          sudo apt-get install -y -qq "postgresql-client-$major"
+          echo "PG_DUMP=/usr/lib/postgresql/$major/bin/pg_dump" >> "$GITHUB_ENV"
+      - name: Dump and encrypt
+        if: steps.cfg.outputs.ready == 'true'
+        run: |
+          f="swapecito-prod-$(date -u +%Y-%m-%d).sql.gz.gpg"
+          "$PG_DUMP" "$DB_URL" --no-owner --no-privileges --schema=public --schema=private --schema=auth \
+            | gzip -9 \
+            | gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" --symmetric --cipher-algo AES256 -o "$f"
+          test -s "$f"
+          echo "FILE=$f" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: steps.cfg.outputs.ready == 'true'
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 30
+          if-no-files-found: error

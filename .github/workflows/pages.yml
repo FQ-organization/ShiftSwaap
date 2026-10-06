@@ -15,7 +15,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # nothing is published unless the page's script parses and the demo runs without errors in a real browser
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Smoke test
+        run: node tests/smoke.mjs
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -26,7 +42,7 @@ jobs:
       - name: Build site
         run: |
           mkdir _site
-          cp index.html manifest.webmanifest _site/
+          cp index.html manifest.webmanifest manifest-dev.webmanifest sw.js _site/
           cp -r icons _site/icons
           cp -r vendor _site/vendor
           touch _site/.nojekyll

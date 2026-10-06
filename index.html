@@ -137,6 +137,8 @@ const APP_ICON='<svg aria-hidden="true" viewBox="0 0 512 512"><defs><linearGradi
 const TENANTS={
  dev:{url:'https://byiisadweulvkfuuopra.supabase.co',key:'sb_publishable_28y2T5XpXTfC40fyA2wxJw_MuUblA8E'},
  prod:{url:'https://wgpgnyapmyvysowdcyvh.supabase.co',key:'sb_publishable_Y3nNuaODdZVHjqlHvlyiVQ_J5lr3XbC'}};
+// installing from a dev page makes a separate "Swapecito Dev" app that opens dev, not prod
+addEventListener('DOMContentLoaded',()=>{if(ENV=='dev'){const l=document.querySelector('link[rel=manifest]');if(l)l.href='manifest-dev.webmanifest'}});
 const ENV=(()=>{let q=null,h='';try{q=new URLSearchParams(location.search).get('env');h=location.hostname}catch(e){}if(q=='local'||TENANTS[q])return q;return!h||h=='localhost'||h=='127.0.0.1'||/(^|[.-])(dev|staging)([.-]|$)/.test(h)?'dev':'prod'})();
 const LIVE=ENV!='local',DEMO=ENV!='prod';
 const DB=LIVE&&window.supabase?window.supabase.createClient(TENANTS[ENV].url,TENANTS[ENV].key):null;
@@ -174,6 +176,7 @@ Object.assign(ES,{'Signing in…':'Entrando…','Creating account…':'Creando c
 Object.assign(ES,{"This time zone can't be set now: a shift would have no time left. Try again after it starts.":'Ahora no se puede poner esta zona horaria: un turno se quedaría sin horas. Inténtalo cuando haya empezado.'});
 Object.assign(ES,{'A tag in this rule was deleted. Choose the tags again.':'Se eliminó una etiqueta de esta regla. Vuelve a elegir las etiquetas.'});
 const ES_RX=[
+[/^Selling shifts is turned off in this room\.$/,m=>'La venta de turnos está desactivada en esta sala.'],[/^This shift is complete\. Ask for a swap instead\.$/,m=>'Este turno está completo. Pide un cambio.'],[/^You are not on this shift\.$/,m=>'No estás en este turno.'],
 [/^That swap breaks a rule\. (.+)$/,m=>`Ese cambio incumple una regla. ${TR(m[1])}`],
 [/^That breaks a rule\. (.+)$/,m=>`Eso incumple una regla. ${TR(m[1])}`],
 [/^Continue as (.+)$/,m=>`Continuar como ${m[1]}`],
@@ -295,6 +298,7 @@ Object.assign(PT,{"This time zone can't be set now: a shift would have no time l
 Object.assign(PT,{'A tag in this rule was deleted. Choose the tags again.':'Uma etiqueta desta regra foi eliminada. Volta a escolher as etiquetas.'});
 Object.assign(PT,{'Closed automatically':'Fechados automaticamente','Cancelled: by the person who asked. Closed automatically: the shift changed hands in another swap, or started before anyone took it.':'Cancelados: por quem o pediu. Fechados automaticamente: o turno mudou de mãos noutra troca, ou começou antes de alguém o ficar.'});
 const PT_RX=[
+[/^Selling shifts is turned off in this room\.$/,m=>'A venda de turnos está desativada nesta sala.'],[/^This shift is complete\. Ask for a swap instead\.$/,m=>'Este turno está completo. Pede uma troca.'],[/^You are not on this shift\.$/,m=>'Não estás neste turno.'],
 [/^That swap breaks a rule\. (.+)$/,m=>`Essa troca viola uma regra. ${TR(m[1])}`],
 [/^That breaks a rule\. (.+)$/,m=>`Isso viola uma regra. ${TR(m[1])}`],
 [/^Continue as (.+)$/,m=>`Continuar como ${m[1]}`],
@@ -412,8 +416,9 @@ const trText=t=>{const K=[];t=t.replace(/\u2068[^\u2069]*\u2069/g,x=>(K.push(x),
 const trTag=p=>p.replace(/\b(placeholder|aria-label|title)="([^"]*)"/g,(m,a,v)=>`${a}="${trText(v)}"`);
 const fin=x=>{if(LANG()!='en')x=x.split(/(<(?:[^>"']|"[^"]*"|'[^']*')*>)/).map((p,i)=>i%2?trTag(p):trText(p)).join('');
  x=x.replace(/\u0001(\d+)\u0002/g,(m,i)=>UT[+i]);UT.length=0;return x};
+const _fdf={},fdFmt=tz=>{const k=LOC()+'|'+tz;return _fdf[k]||(_fdf[k]=new Intl.DateTimeFormat(LOC(),{weekday:'short',day:'numeric',month:'short',timeZone:tz}))};
 const PTW=['dom','seg','ter','qua','qui','sex','sáb'],PTM=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const fd=(ms,tz=TZ())=>LANG()=='pt'?(q=>PTW[new Date(Date.UTC(q.y,q.m,q.d)).getUTCDay()]+' '+q.d+' '+PTM[q.m]+(q.y!=parts(NOW,tz).y?' '+q.y:''))(parts(ms,tz)):new Date(ms).toLocaleDateString(LOC(),{weekday:'short',day:'numeric',month:'short',timeZone:tz}).replace(/[,.]/g,'')+(parts(ms,tz).y!=parts(NOW,tz).y?' '+parts(ms,tz).y:'');
+const fd=(ms,tz=TZ())=>LANG()=='pt'?(q=>PTW[new Date(Date.UTC(q.y,q.m,q.d)).getUTCDay()]+' '+q.d+' '+PTM[q.m]+(q.y!=parts(NOW,tz).y?' '+q.y:''))(parts(ms,tz)):fdFmt(tz).format(ms).replace(/[,.]/g,'')+(parts(ms,tz).y!=parts(NOW,tz).y?' '+parts(ms,tz).y:'');
 // names show as first name + last initial ("Francisco Quinaz Gomes" → "Francisco G."); the full name is only used for editing
 const shortName=n=>{const p=String(n||'').trim().split(/\s+/).filter(Boolean);return p.length<2?(p[0]||'?'):p[0]+' '+p[p.length-1][0].toUpperCase()+'.'};
 const fullName=i=>(P[i]||['?'])[0],nm=i=>shortName(fullName(i)),lv=i=>tagsOf(i).map(t=>t.name).join('/');
@@ -450,6 +455,8 @@ const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&qu
 const inboxFor=u=>todo(u);
 let notifs=[],prefs={},cid=0,nr=newNr();let ADMINS=['M'];
 const DAYMS=864e5,TD0=Math.floor(Date.UTC(2026,8,29)/DAYMS),EV=[];
+const repErr=x=>{try{if((repErr.n=(repErr.n||0)+1)>5)return;track('client_error',{kind:String((x&&x.name)||'error').toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,24)||'error'})}catch(e){}};
+addEventListener('error',e=>repErr(e.error));addEventListener('unhandledrejection',e=>repErr(e.reason));
 function track(n,p,u){const e={d:Math.floor(Math.max(NOW,TD0*DAYMS)/DAYMS),n,u:u||U,r:R&&R.id,p:p||{}};EV.push(e);
  if(DB&&sessUid&&n!='signup'){EVQ.push({name:n,room_id:typeof e.r=='string'&&e.r.length==36?e.r:null,props:e.p});if(!evT)evT=setTimeout(flushEv,3000)}}
 // kind 'ask' is the "you can take this shift" broadcast, the only one people can mute; it is stored as 'req'
@@ -459,8 +466,12 @@ function notify(to,text,imp='normal',sub='',kind='req',dd=null){if(kind=='ask'){
 // about approvals and decisions: live, the server writes these itself (request_approval, apply_swap, decline_swap), so nobody can send them
 const nS=(to,...a)=>DB?track('notification',{kind:'req'},to):notify(to,...a);
 // phone/OS notification, in the app language like the bell
-function osNote(t){try{if(typeof Notification!='undefined'&&Notification.permission=='granted')new Notification('Swapecito',{body:LANG()=='en'?t:trText(t)})}catch(e){}}
-function askPush(){try{Notification.requestPermission().then(p=>{say(p=='granted'?'Phone notifications on 🔔':'Notifications are blocked in this browser');render()})}catch(e){say('Notifications are not available here');render()}}
+// phone notifications only reach a device while the app is open there (there's no push server yet). Android has no
+// `new Notification`, so they go through the service worker (sw.js) when it's registered
+const pushState=()=>typeof Notification=='undefined'?'none':Notification.permission=='granted'?'on':Notification.permission=='denied'?'blocked':'off';
+function osNote(t){try{if(pushState()!='on')return;const body=LANG()=='en'?t:trText(t),plain=()=>{try{new Notification('Swapecito',{body})}catch(e){}};
+ if(navigator.serviceWorker)navigator.serviceWorker.getRegistration().then(r=>r?r.showNotification('Swapecito',{body,icon:'icons/icon-192.png'}):plain(),plain);else plain()}catch(e){}}
+function askPush(){try{Notification.requestPermission().then(p=>{say(p=='granted'?tx('Phone notifications on while Swapecito is open 🔔','Notificaciones del móvil activadas mientras Swapecito está abierto 🔔','Notificações no telemóvel ativadas enquanto o Swapecito está aberto 🔔'):'Notifications are blocked in this browser');render()})}catch(e){say('Notifications are not available here');render()}}
 function newNr(t){return{name:'',type:t||'shift',conds:[{op:'min',n:1,tags:[]}],h:11,n:5,per:'month',tags:[]}}
 const mkRule=()=>{const b={name:(nr.name.trim()||'New rule').replace(/[<>"&]/g,'').slice(0,80),on:true,custom:true,type:nr.type,tags:[]};
  if(nr.type=='shift')b.conds=nr.conds.map(c=>({op:c.op,n:c.n,tags:[...c.tags]}));else b.tags=[...nr.tags];
@@ -487,7 +498,9 @@ const okDay=ds=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(ds||''))return false;const[y,m,d
  FAR=()=>tx('Pick a date within the next 2 years.','Elige una fecha dentro de los próximos 2 años.','Escolhe uma data nos próximos 2 anos.'),dayErr=ds=>!okDay(ds)?'Pick a date.':ds>lastDay()?FAR():'';
 const tzCity=tz=>tz=='UTC'?'UTC':tz.split('/').pop().replace(/_/g,' '),tzNote=()=>TZ()!=LOCAL_TZ?' · '+tx(`${tzCity(TZ())} time`,`hora de ${tzCity(TZ())}`,`hora de ${tzCity(TZ())}`):'';
 const TZS=()=>{let l=[];try{l=Intl.supportedValuesOf('timeZone').slice()}catch(e){}if(!l.includes('UTC'))l.unshift('UTC');if(!l.includes(TZ()))l.push(TZ());return l};
-const bk=()=>{const k=JSON.stringify([RULES,MT]);if(bk.S!==S||bk.k!==k){bk.S=S;bk.k=k;bk.v=new Map(validate(S,RULES).map(v=>[v.k,v.sev]))}return bk.v};
+// the schedule's current violations, worked out again only when the shifts, rules, tags or language change
+const curV=()=>{const k=JSON.stringify([RULES,MT,LANG()]);if(curV.S!==S||curV.k!==k){curV.S=S;curV.k=k;curV.v=validate(S,RULES)}return curV.v};
+const bk=()=>{const v=curV();if(bk.src!==v){bk.src=v;bk.v=new Map(v.map(x=>[x.k,x.sev]))}return bk.v};
 // a change breaks the rules if it adds a violation or makes one worse (more shifts over a maximum, a bigger shortfall, less rest, more overlap)
 const worse=(v,b=bk())=>!b.has(v.k)||v.sev>b.get(v.k);
 function mvGo(n){mv={y:mv.y+Math.floor((mv.m+n)/12),m:(mv.m+n+12)%12};sel=null;render()}
@@ -534,8 +547,11 @@ function addMine(date){if(dayErr(date)){say(dayErr(date));return render()}if(day
  S=S2;if(ex){const row={shift_id:n.id,room_id:R.id,user_id:U,pos:ex.m.length};dq(()=>DB.from('shift_members').insert(row))}else shiftOps([n]);mv=mvOf(n);tab='shifts';track('shift_added',{self:true});if(ex)ex.m.forEach(d=>notify(d,`${nm(U)} joined your ${fd(n.start)} shift`));log(`${nm(U)} added their shift on ${fd(n.start)}`);sel=n.id;say(inc(n)?'Added · waiting for teammates':'Added ✓ The shift is complete');tickReminders();render()}
 // leaving a waiting shift may only deepen the headcount shortfall it already has (as before): it can't add a violation or worsen a tagged one
 const leaveViol=s=>{const m=s.m.filter(i=>i!=U),b=bk();return validate(m.length?S.map(x=>x===s?{...s,m}:x):S.filter(x=>x!==s),RULES).filter(v=>worse(v,b)&&!(v.low&&!(v.c.tags||[]).length&&b.has(v.k)))},canLeave=s=>!!s&&inc(s)&&s.m.includes(U)&&!started(s)&&!leaveViol(s).length;
+// a database without leave_shift yet (it's applied separately) gets the direct writes the app used before
+async function legacyLeave(id,me_,left){const qs=[()=>DB.from('requests').update({status:'void'}).eq('shift_id',id).eq('owner_id',me_).in('status',['open','waiting']),()=>DB.from('shift_members').delete().eq('shift_id',id).eq('user_id',me_)];
+ if(!left)qs.push(()=>DB.from('shifts').delete().eq('id',id));for(const q of qs){const r=await q();if(r.error)return r}return{}}
 function removeMe(id){const s=S.find(x=>x.id==id);if(!s||!inc(s)||!s.m.includes(U)||started(s))return;{const v=leaveViol(s);if(v.length){say(v[0].msg);return render()}}const m=s.m.filter(i=>i!=U),me_=U;
- dq(()=>DB.from('requests').update({status:'void'}).eq('shift_id',id).eq('owner_id',me_).in('status',['open','waiting']));dq(()=>DB.from('shift_members').delete().eq('shift_id',id).eq('user_id',me_));if(!m.length)dq(()=>DB.from('shifts').delete().eq('id',id));
+ {const left=m.length;dq(()=>DB.rpc('leave_shift',{p_shift:id}).then(r=>r.error&&/leave_shift|PGRST202/.test((r.error.message||'')+(r.error.code||''))?legacyLeave(id,me_,left):r))}
  S=m.length?S.map(x=>x===s?{...s,m}:x):S.filter(x=>x!==s);reqs.filter(r=>r.sid==id&&(r.status=='open'||r.status=='waiting')).forEach(r=>{r.status='void';r.why='cancelled'});log(`${nm(U)} removed their shift on ${fd(s.start)}`);sel=null;say('Removed');render()}
 let NOW=LIVE?Date.now():Date.UTC(2026,8,29);
 const saveRoom=()=>{if(R){R.TAGS=TAGS;R.MT=MT;R.S=S;R.reqs=reqs;R.msgs=msgs;R.RULES=RULES;R.mode=mode;R.allowSell=allowSell;R.pending=pending;R.LOG=LOG}};
@@ -660,7 +676,7 @@ function renderProfile(){const p=pf(U);
  let h=`<div class="top"><div class="hi"><button class="back" aria-label="Back" onclick="screen='home';render()">‹</button><h1>My profile</h1></div>${actAs(ALL,0)}</div>
  <div class="pn" style="text-align:center"><div style="display:flex;justify-content:center">${av(U,76)}</div><button class="link" onclick="avOpen=!avOpen;render()">${avOpen?tx('Done','Listo'):tx('Change picture','Cambiar imagen')}</button>${avOpen?avGrid():''}<h2 style="margin-top:6px">${esc(nm(U))}</h2><div>${tg(U)}</div><div class="sub" style="margin-top:6px">Your tags are set by each room's admins.</div></div>
  <div class="pn"><h2>My information</h2><div style="margin-top:12px">${field('Name',fullName(U),'name')}${field('Email',p.email,'email','email')}${field('Phone',p.phone,'phone','tel')}${field('Role',p.specialty,'specialty')}${field('Organization',p.hospital,'hospital')}${field('Team',p.department,'department')}</div></div>
- <div class="pn"><h2>Shift reminders</h2><label class="r"><input type="checkbox" ${p.remind!==false?'checked':''} onchange="setPf('remind',this.checked)"><span><b>Remind me before my shifts</b><br><span class="sub">You get a notification before each shift starts.</span></span></label>${p.remind!==false?`<div class="sub">How long before?</div><div class="dates" style="flex-wrap:wrap">${[1,2,6,12,24].map(x=>`<button class="dt ${(p.lead||12)==x?'on':''}" onclick="setLead(${x})">${x}h</button>`).join('')}</div>`:''}<div class="acts" style="margin-top:8px"><button class="link" onclick="askPush()">Enable phone notifications</button></div></div>
+ <div class="pn"><h2>Shift reminders</h2><label class="r"><input type="checkbox" ${p.remind!==false?'checked':''} onchange="setPf('remind',this.checked)"><span><b>Remind me before my shifts</b><br><span class="sub">${tx('While Swapecito is open, you get a reminder before each shift starts.','Mientras Swapecito está abierto, recibes un recordatorio antes de cada turno.','Enquanto o Swapecito está aberto, recebes um lembrete antes de cada turno.')}</span></span></label>${p.remind!==false?`<div class="sub">How long before?</div><div class="dates" style="flex-wrap:wrap">${[1,2,6,12,24].map(x=>`<button class="dt ${(p.lead||12)==x?'on':''}" onclick="setLead(${x})">${x}h</button>`).join('')}</div>`:''}${pushState()=='off'?`<div class="acts" style="margin-top:8px"><button class="link" onclick="askPush()">${tx('Show them as phone notifications','Mostrarlos como notificaciones del móvil','Mostrá-los como notificações no telemóvel')}</button></div>`:pushState()=='on'?`<div class="sub" style="margin-top:8px">🔔 ${tx('Phone notifications are on while Swapecito is open.','Las notificaciones del móvil están activadas mientras Swapecito está abierto.','As notificações no telemóvel estão ativadas enquanto o Swapecito está aberto.')}</div>`:pushState()=='blocked'?`<div class="sub" style="margin-top:8px">${tx('Notifications are blocked for this site in your browser settings.','Las notificaciones de este sitio están bloqueadas en los ajustes del navegador.','As notificações deste site estão bloqueadas nas definições do navegador.')}</div>`:''}</div>
  ${LIVE?'':`<div class="pn"><h2>Demo clock</h2><div class="sub">${clockStr()} UTC. Move time forward to watch reminders arrive.</div><div class="acts"><button class="pill" onclick="jumpNext()">Next reminder</button><button class="link" onclick="advance(12)">+12h</button><button class="link" onclick="advance(24)">+1 day</button><button class="link q" onclick="resetClock()">Reset</button></div></div>`}${canDev()?`<div class="pn"><button class="room" style="width:100%;margin:0;box-shadow:none;padding:0" onclick="openDev()"><span class="ric sm" style="background:var(--accs);color:var(--accd)">${IC('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')}</span><div class="rb"><b>Developer dashboard</b><div class="sub">App usage metrics</div></div></button></div>`:''}<div class="pn"><h2>Language</h2><div class="seg" style="margin:10px 0 0">${[['auto','System'],['en','English'],['es','Español'],['pt','Português']].map(([k,l])=>`<button class="${langPref==k?'on':''}" onclick="setLang('${k}')">${l}</button>`).join('')}</div></div>${securityCard()}<div class="pn"><div class="sub">Signed in as ${esc((LIVE?LOGIN_EMAIL:pf(U).email)||'')}</div><div class="acts"><button class="pill out" onclick="logout()">Log out</button></div></div>`+(toast?`<div class="toast" role="status">${toast}</div>`:'');paint(h)}
 const IC=(p)=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 const NAVI={shifts:IC('<rect x="3.5" y="5" width="17" height="15.5" rx="4.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/>'),feed:IC('<path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-3.6A8 8 0 1 1 20 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01" stroke-width="2.4"/>'),sched:IC('<rect x="3.5" y="5" width="17" height="15.5" rx="4.5"/><path d="M8 3v4M16 3v4M3.5 10h17M12 12.8v4.4M9.8 15h4.4"/>'),rules:IC('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>')};
@@ -678,7 +694,7 @@ function doAuth(){if(LIVE)return doAuthLive();const e=auth.email.trim().toLowerC
 function magic(){if(LIVE)return magicLive();const e=auth.email.trim().toLowerCase(),a=ACCTS.find(x=>x.email==e);if(!a){auth.err='No account with this email.';return render()}say('Magic link sent to '+e+' (demo: signing you in)');login(a.uid)}
 function logout(){if(LIVE)return logoutLive();track('logout');ME=null;screen='login';auth={...auth,mode:'in',err:'',pw:'',note:'',resend:false};render()}
 function renderLogin(){const reg=auth.mode=='up';
- let h=`<div class="login"><div class="logo app">${APP_ICON}</div><h1 style="text-align:center;font-size:28px">Swapecito</h1><div class="sub" style="text-align:center">Swap shifts without the chaos.</div>
+ let h=`<div class="login"><div class="logo app">${APP_ICON}</div><h1 style="text-align:center;font-size:28px">Swapecito</h1><div class="sub" style="text-align:center">Swap shifts without the chaos.</div>${LIVE&&pendingJoin?`<div class="pn" style="margin:16px 0 0;text-align:center"><b>${tx("You're invited to a room",'Te han invitado a una sala','Foste convidado para uma sala')}</b><div class="sub">${tx('Sign in or create an account, and you join it right after.','Inicia sesión o crea una cuenta y entrarás justo después.','Inicia sessão ou cria uma conta e entras logo a seguir.')}</div></div>`:''}
  <div class="seg" style="margin:22px 0 14px"><button class="${!reg?'on':''}" onclick="auth={...auth,mode:'in',err:'',note:'',resend:false};render()">Sign in</button><button class="${reg?'on':''}" onclick="auth={...auth,mode:'up',err:'',note:'',resend:false};render()">Create account</button></div>
  <div class="pn" style="margin:0">${reg?`<label class="fld">Full name<input id="an" autocomplete="name" value="${esc(auth.name)}" oninput="auth.name=this.value"></label>`:''}
  <label class="fld">Email<input id="ae" type="email" autocomplete="email" value="${esc(auth.email)}" oninput="auth.email=this.value"></label>
@@ -740,8 +756,8 @@ function sendMsg(){syncD();const t=draft.trim();if(!t||tooLong(t))return;const m
  msgs.push(m);{const row={room_id:R.id,user_id:U,text:t,parent:m.parent||null};dq(()=>DB.from('messages').insert(row),()=>(putD(k,t),unsent()))}track('message');draft='';replyTo=null;stick=true;render();const e=document.getElementById('mi');e&&e.focus&&e.focus()}
 const say=t=>{toast=t;clearTimeout(tt);tt=setTimeout(()=>{toast='';const t=document.querySelector&&document.querySelector('.toast');t&&t.remove()},3200)};
 const makeS=()=>Array.from({length:182},(_,k)=>({id:'s'+k,start:Date.UTC(2026,9,1+k,8),end:Date.UTC(2026,9,1+k,8)+24*H,type:'Emergency 24h',m:[JU[k%5],SE[(k+Math.floor(k/5))%5]]}));
-function options(sid,u=U){const s=S.find(x=>x.id==sid),out=[];if(started(s))return out;
-for(const c of MEM){if(c==u||s.m.includes(c))continue;
+function options(sid,u=U,only){const s=S.find(x=>x.id==sid),out=[];if(started(s))return out;
+for(const c of only?[only]:MEM){if(c==u||s.m.includes(c))continue;
  out.push({key:'g'+c,who:c,changes:[{sid,out:u,in:c}]});
  for(const t of S)if(t.m.includes(c)&&!t.m.includes(u)&&t.id!=sid&&!started(t)&&Math.abs(t.start-s.start)<=45*24*H)out.push({key:'d'+c+t.id,who:c,changes:[{sid,out:u,in:c},{sid:t.id,out:c,in:u}]})}
 return out.map(o=>({...o,...simulate(o.changes)}))}
@@ -759,33 +775,37 @@ function post(sid){const owner=U,s=S.find(x=>x.id==sid);if(started(s)){say(PAST(
  say(`Posted · ${n} colleagues notified`);fm={...fm,imp:'normal',sell:false,price:''};sel=null;render()}
 // a request closed by its owner or by another swap: its pending offers close too (on the server, a trigger on requests) and their makers are told
 const closeOffers=(r,tell)=>new Set(r.offers.filter(f=>f.status=='pending').map(f=>(f.status='void',f.from))).forEach(tell);
-function cancel(id){const r=reqs.find(x=>x.id==id);if(!r||(r.status!='open'&&r.status!='waiting')){say('This request is no longer open.');return render()}
+// a request or offer made a moment ago has a temporary id until the server's comes back with the next reload
+const unsaved=x=>LIVE&&!!x&&x.id<0,stillSaving=()=>{say(tx('Still saving… try again in a moment.','Todavía se está guardando… inténtalo de nuevo en un momento.','Ainda a guardar… tenta de novo daqui a pouco.'));reload();render()};
+// an update that matched no row (already changed, or not allowed) didn't save: say so, and the reload shows what's true
+const NOSAVE=()=>tx("That change didn't save.",'Ese cambio no se guardó.','Essa alteração não foi guardada.'),must=q=>q.select('id').then(r=>r.error||(r.data&&r.data.length)?r:{error:{message:NOSAVE()}});
+function cancel(id){const r=reqs.find(x=>x.id==id);if(unsaved(r))return stillSaving();if(!r||(r.status!='open'&&r.status!='waiting')){say('This request is no longer open.');return render()}
  r.status='void';r.why='cancelled';unpend(pending.find(p=>p.r===r));dq(()=>DB.rpc('cancel_request',{p_request:id}));track('request_cancelled');log(`${nm(r.owner)} cancelled a request`);
  const d=fd(S.find(x=>x.id==r.sid).start);closeOffers(r,u=>notify(u,`${nm(r.owner)} cancelled the request for ${d}`,'normal','Your offer is closed.'));render()}
-const cand=(r,c)=>{const s=S.find(x=>x.id==r.sid);return options(r.sid,r.owner).filter(o=>o.who==c&&!o.viol.length&&(!r.sell||o.changes.length==1)).sort((a,b)=>(b.changes.length>1)-(a.changes.length>1)||near(a,s)-near(b,s))};
+const cand=(r,c)=>{const s=S.find(x=>x.id==r.sid);return options(r.sid,r.owner,c).filter(o=>o.who==c&&!o.viol.length&&(!r.sell||o.changes.length==1)).sort((a,b)=>(b.changes.length>1)-(a.changes.length>1)||near(a,s)-near(b,s))};
 const todo=u=>reqs.filter(r=>r.status=='open'&&!started(S.find(x=>x.id==r.sid))&&((r.owner==u&&r.offers.some(f=>f.status=='pending'))||(r.owner!=u&&r.notified.includes(u)&&!r.declined.includes(u)&&!r.offers.some(f=>f.from==u&&f.status=='pending'))));
 function offer(rid,key){const r=reqs.find(x=>x.id==rid);
  if(!r||r.status!='open'||!S.find(x=>x.id==r.sid).m.includes(r.owner)){say('This request is no longer open.');return render()}
  const o=cand(r,U).find(x=>x.key==key);if(!o){track('blocked',{where:'offer'});say('That shift no longer works with the rules.');return render()}
  r.offers.filter(f=>f.from==U&&f.status=='pending').forEach(f=>f.status='withdrawn');
  {const me_=U,rq=r.id,row={request_id:r.id,room_id:R.id,from_id:U,key:o.key,changes:o.changes};dq(()=>DB.from('offers').update({status:'withdrawn'}).eq('request_id',rq).eq('from_id',me_).eq('status','pending'));dq(()=>DB.from('offers').insert(row))}
- r.offers.push({id:++seq,from:U,key:o.key,changes:o.changes,status:'pending'});track('offer_sent',{rid:r.id,swap:o.changes.length>1});
+ r.offers.push({id:LIVE?-(++cid):++seq,from:U,key:o.key,changes:o.changes,status:'pending'});track('offer_sent',{rid:r.id,swap:o.changes.length>1});
  const s=S.find(x=>x.id==r.sid),t=o.changes.length>1?S.find(x=>x.id==o.changes[1].sid):null;
  notify(r.owner,`${nm(U)} ${r.sell?'wants to buy':'can swap with you on'} ${fd(s.start)}`,r.imp,t?`Offers their ${fd(t.start)} shift · rules ok ✓`:(r.sell?'€'+r.price:'Takes it as is'));
  log(`${nm(U)} offered ${nm(r.owner)} ${t?fd(t.start):'to take '+fd(s.start)}`);say('Offer sent to '+nm(r.owner));delete osel[rid];render()}
 // withdrawing the offer a swap waits on (for an admin) reopens the request, like the trigger on offers does on the server
-function withdraw(rid,oid){const r=reqs.find(x=>x.id==rid),f=r&&r.offers.find(x=>x.id==oid);if(!f||f.status!='pending'){say('This offer is no longer available.');return render()}
+function withdraw(rid,oid){const r=reqs.find(x=>x.id==rid),f=r&&r.offers.find(x=>x.id==oid);if(unsaved(r)||unsaved(f))return stillSaving();if(!f||f.status!='pending'){say('This offer is no longer available.');return render()}
  f.status='withdrawn';dq(()=>DB.rpc('withdraw_offer',{p_offer:oid}));
  if(r.status=='waiting'&&r.taker==f.from){unpend(pending.find(p=>p.r===r));r.status='open';r.taker=null;r.acc=null;notify(r.owner,`${nm(f.from)} withdrew from the swap on ${fd(S.find(x=>x.id==r.sid).start)}`,'normal','Your request is open again.')}render()}
-function declineOffer(rid,oid){const r=reqs.find(x=>x.id==rid),f=r.offers.find(x=>x.id==oid);f.status='declined';dq(()=>DB.from('offers').update({status:'declined'}).eq('id',oid));track('offer_declined');notify(f.from,`${nm(r.owner)} declined your offer`);render()}
-function acceptOffer(rid,oid){const r=reqs.find(x=>x.id==rid),f=r&&r.offers.find(x=>x.id==oid);
+function declineOffer(rid,oid){const r=reqs.find(x=>x.id==rid),f=r&&r.offers.find(x=>x.id==oid);if(!f)return;if(unsaved(r)||unsaved(f))return stillSaving();f.status='declined';dq(()=>must(DB.from('offers').update({status:'declined'}).eq('id',oid)));track('offer_declined');notify(f.from,`${nm(r.owner)} declined your offer`);render()}
+function acceptOffer(rid,oid){const r=reqs.find(x=>x.id==rid),f=r&&r.offers.find(x=>x.id==oid);if(unsaved(r)||unsaved(f))return stillSaving();
  if(!r||r.status!='open'||!f||f.status!='pending'){say('This offer is no longer available.');return render()}
  if(f.changes.some(c=>started(S.find(x=>x.id==c.sid)))){say(PAST());return render()}
  const ok=f.changes.every(c=>{const t=S.find(x=>x.id==c.sid);return t.m.includes(c.out)&&!t.m.includes(c.in)}),sim=simulate(f.changes);
  if(!ok||sim.viol.length){f.status='void';track('blocked',{where:'accept'});say(ok?'The schedule changed: '+sim.viol[0].msg:'That offer is no longer possible.');return render()}
  if(mode=='approval'){dq(()=>DB.rpc('request_approval',{p_offer:f.id}));r.status='waiting';r.taker=f.from;const p={r,o:f,who:f.from};pending.push(p);log(`${nm(r.owner)} accepted ${nm(f.from)}'s offer — waiting for admin`);ADMINS.filter(a=>a!=U&&canDecide(p,a)).forEach(a=>nS(a,`${nm(f.from)} and ${nm(r.owner)} need your approval`));nS(f.from,`${nm(r.owner)} accepted your offer · waiting for admin`);say('Accepted. Waiting for admin approval.');return render()}
  finish(r,f,f.from,'Auto-approved')}
-function finish(r,o,who,by,done){if(!done)dq(()=>DB.rpc('apply_swap',{p_offer:o.id}));track('swap_completed',{rid:r.id,sell:r.sell,approved:by!='Auto-approved',hours:Math.max(0,(NOW-(r.t0||NOW))/36e5)});const sim=simulate(o.changes);S=sim.after;r.status='done';r.taker=who;const af=r.offers.find(f=>f.from==who&&f.status=='pending');if(af)af.status='accepted';reqs.filter(x=>x!==r&&(x.status=='open'||x.status=='waiting')&&o.changes.some(c=>c.sid==x.sid)).forEach(x=>{x.status='void';unpend(pending.find(p=>p.r===x));const d=fd(S.find(y=>y.id==x.sid).start);nS(x.owner,`Your request for ${d} was closed`,'normal','That shift changed hands in another swap.');closeOffers(x,u=>nS(u,`${nm(x.owner)}'s request for ${d} was closed`,'normal','Your offer is closed.'))});r.offers.forEach(f=>{if(f.status=='pending'){f.status='void';nS(f.from,'Another offer was accepted for '+fd(S.find(x=>x.id==r.sid).start))}});
+function finish(r,o,who,by,done){if(!done)dq(()=>DB.rpc('apply_swap',{p_offer:o.id}));track('swap_completed',{rid:r.id,sell:r.sell,approved:by!='Auto-approved',hours:Math.max(0,(NOW-(r.t0||NOW))/36e5)});const sim=simulate(o.changes);S=sim.after;r.status='done';r.taker=who;const af=r.offers.find(f=>f.from==who&&f.status=='pending');if(af)af.status='accepted';reqs.filter(x=>x!==r&&(x.status=='open'||x.status=='waiting')&&o.changes.some(c=>c.sid==x.sid&&c.out==x.owner)).forEach(x=>{x.status='void';unpend(pending.find(p=>p.r===x));const d=fd(S.find(y=>y.id==x.sid).start);nS(x.owner,`Your request for ${d} was closed`,'normal','That shift changed hands in another swap.');closeOffers(x,u=>nS(u,`${nm(x.owner)}'s request for ${d} was closed`,'normal','Your offer is closed.'))});r.offers.forEach(f=>{if(f.status=='pending'){f.status='void';nS(f.from,'Another offer was accepted for '+fd(S.find(x=>x.id==r.sid).start))}});
  log(`${by}: ${nm(r.owner)} ↔ ${nm(who)} on ${fd(S.find(x=>x.id==r.sid).start)}. Before and after saved.`);nS(r.owner,`${nm(who)} took your shift${r.sell?' · €'+r.price:''}`);nS(who,'Your new shift is confirmed');msgs.push({sys:1,seq:tseq(),text:`${nm(r.owner)}'s ${fd(S.find(x=>x.id==r.sid).start)} shift now goes to ${nm(who)}${r.sell?` · €${r.price}`:''} ✓`});say(r.sell?'Shift sold 🎉':'Swap confirmed 🎉');tickReminders();sel=null;render()}
 // a decision in flight (live) or just made: Approve/Decline stay disabled, so a double click can't decide the next card
 let decBusy=0,decT;const decDone=()=>{clearTimeout(decT);decT=setTimeout(()=>{decBusy=0;render()},600)},unpend=p=>{const i=pending.indexOf(p);if(i>=0)pending.splice(i,1)};
@@ -904,7 +924,7 @@ function newM(c){const o=c.querySelector('.newm'),bt=()=>c.scrollHeight-c.scroll
 // a date field fires change per typed segment (with focus briefly elsewhere as it moves to the next segment): re-rendering then resets its segment cursor, so after typing, while it keeps focus, wait until it loses it (a date picked with the mouse renders at once)
 function rBlur(el){if(!el._k)return render();setTimeout(()=>{if(document.activeElement!=el)return render();if(!el._rb){el._rb=1;el.addEventListener('blur',()=>{el._rb=0;setTimeout(()=>{if(el.isConnected)render()})},{once:true})}})}
 function render(){if(inChg||inPaint){if(!chgQ){chgQ=1;setTimeout(()=>{chgQ=0;render()})}return}if(LIVE)NOW=Date.now();if(screen=='loading'||screen=='offline')return renderMsg();if(screen=='forgot')return renderForgot();if(screen=='newpw')return DB?renderNewPw():(screen='login',render());tickReminders();expireSwaps();if(screen=='login')return renderLogin();if(screen=='join')return renderJoin();if(screen=='dev'){if(!canDev()){screen=ME?'home':'login';return render()}return renderDev()}if(screen=='oauth')return renderOauth();if(screen=='thread')return renderThread();if(screen=='profile')return renderProfile();if(screen=='home')return renderHome();if(screen=='bell')return renderBell();
-const ns=S.find(s=>s.m.includes(U)&&s.start>=NOW),cnt=S.filter(s=>s.m.includes(U)&&mk(s)==mv.y+'-'+mv.m).length;const unread=notifs.filter(n=>n.to==U&&!n.read).length;const bad=new Set(validate(S,RULES).filter(x=>{const t=S.find(s=>s.id==x.sid);return t&&!inc(t)}).map(x=>x.sid));
+const ns=S.find(s=>s.m.includes(U)&&s.start>=NOW),cnt=S.filter(s=>s.m.includes(U)&&mk(s)==mv.y+'-'+mv.m).length;const unread=notifs.filter(n=>n.to==U&&!n.read).length;const bad=new Set(curV().filter(x=>{const t=S.find(s=>s.id==x.sid);return t&&!inc(t)}).map(x=>x.sid));
 let h=`<div class="top"><div class="hi"><button class="back" aria-label="Back to my shifts" onclick="goHome()">‹</button><span class="ric sm" style="background:${R.bg}">${R.icon}</span><div><h1>${tn(R)}</h1><div class="sub">${tg(U)}${ADMINS.includes(U)?' <u class="tg s">Admin</u>':''} · ${cnt} in ${MN[mv.m].slice(0,3)}${ns?' · next '+fd(ns.start):''}</div></div></div><div class="row2">${actAs(MEM)}</div></div>`;
 if(tab=='sched'){const adm=ADMINS.includes(U);nsf.date=nsf.date||nextFree();const c=checkNew(nsf.date,nsf.docs),pv=parseCsv(imp),nv=imp.trim()?validate([...S,...pv.shifts].sort((a,b)=>a.start-b.start),RULES).filter(v=>worse(v)&&(adm||!v.low)).length:0;
  h+=`<div class="mo"><b>Schedule</b> · add new shifts</div>${adm?`<div class="pn"><h2>Add a shift</h2><div class="sub">${R.type} · 08:00 to 08:00${tzNote()}</div><div class="frow" style="margin-top:12px"><label>Date<input type="date" min="${firstOpenDay()}" max="${lastDay()}" value="${nsf.date}" onkeydown="this._k=1" onchange="nsf.date=this.value;rBlur(this)"></label></div><div class="sub">Who is on shift?</div><div class="chips">${MEM.map(i=>`<button class="chip pk ${nsf.docs.includes(i)?'on':''}" onclick="toggleDoc('${i}')">${av(i,22)}${nm(i)} ${tg(i)}</button>`).join('')}</div>
@@ -1064,7 +1084,7 @@ async function removeMember(u){if(!ADMINS.includes(U)||u==U||!MEM.includes(u))re
 function saveRoomName(){const n=(rmEdit.rid==R.id?rmEdit.name:R.name).trim(),e=roomNameErr(n);
  if(e){say(e);return render()}
  rmEdit={rid:null,name:''};if(n==R.name)return render();
- const old=R.name,rid=R.id;R.name=n;delete R.tr;dq(()=>DB.from('rooms').update({name:n}).eq('id',rid));log(`${nm(U)} renamed the room from "${old}" to "${n}"`);say(tx('Room renamed ✓','Sala renombrada ✓'));render()}
+ const old=R.name,rid=R.id;R.name=n;delete R.tr;dq(()=>must(DB.from('rooms').update({name:n}).eq('id',rid)));log(`${nm(U)} renamed the room from "${old}" to "${n}"`);say(tx('Room renamed ✓','Sala renombrada ✓'));render()}
 // A new time zone: shifts that have started stay as they are; every upcoming shift keeps its day and its 08:00 start and end in the new zone.
 // The first upcoming one can't start in the past or before the running shift ends: it then starts when it was due to, or when that shift ends, and still ends at 08:00.
 // A shift shortened like that gets its whole day back on a later change (its start is taken as 08:00 the day before its end). set_room_tz does the same on the server.
@@ -1079,7 +1099,7 @@ function setRoomTz(z){const old=TZ();if(z==old||!TZS().includes(z))return;const 
   ...pl.gap?[tx(`No shift will cover ${hm(pl.gap[0])} to ${hm(pl.gap[1])}.`,`Ningún turno cubrirá de ${hm(pl.gap[0])} a ${hm(pl.gap[1])}.`,`Nenhum turno vai cobrir de ${hm(pl.gap[0])} a ${hm(pl.gap[1])}.`)]:[],...nv.slice(0,3).map(v=>(LANG()=='en'?v.msg:TR(v.msg)))];
  if(L.length&&!confirm(tx(`Change the time zone to ${c}? Upcoming shifts keep their day and 08:00 start (${c} time).`,`¿Cambiar la zona horaria a ${c}? Los próximos turnos mantienen su día y el inicio a las 08:00 (hora de ${c}).`,`Mudar o fuso horário para ${c}? Os próximos turnos mantêm o dia e o início às 08:00 (hora de ${c}).`)+'\n\n'+L.join('\n')))return render();
  S=pl.S;R.tz=z;R.S=S;dq(()=>DB.rpc('set_room_tz',{p_room:rid,p_tz:z}));log(`${nm(U)} set the room's time zone to ${z}`);say(tx('Time zone saved ✓','Zona horaria guardada ✓'));render()}
-function setRoomIcon(e){if(R.icon==e)return;const rid=R.id;R.icon=e;dq(()=>DB.from('rooms').update({icon:e}).eq('id',rid));log(`${nm(U)} changed the room icon to ${e}`);render()}
+function setRoomIcon(e){if(R.icon==e)return;const rid=R.id;R.icon=e;dq(()=>must(DB.from('rooms').update({icon:e}).eq('id',rid)));log(`${nm(U)} changed the room icon to ${e}`);render()}
 function rulesCard(){const adm=ADMINS.includes(U),d=adm?'':'disabled';
  return`<div class="pn"><h2>Rules</h2><div class="sub">${adm?'You are an admin: you can create and edit rules.':'Only admins can change rules.'}</div>`+RULES.map(r=>`<label class="r"><input type="checkbox" ${d} ${r.on?'checked':''} onchange="setRule('${r.id}',{on:this.checked})"><span><b>${tn(r)}</b><br><span class="sub">${desc(r)}</span>${r.type=='rest'?`<br><input type="number" ${d} aria-label="Hours" min="0" max="168" value="${r.h}" style="width:76px;margin-top:6px" onchange="setRule('${r.id}',{h:numIn(this,0,168,${r.h})})"> <span class="sub">hours</span>`:''}${adm?`<br><button class="link q" type="button" onclick="delRule('${r.id}')">${tx('Delete rule','Eliminar regla')}</button>`:''}</span></label>`).join('')+(RULES.length?'':`<div class="sub" style="margin-top:10px">${tx('No rules yet. Swaps and new shifts are only checked for overlaps.','Aún no hay reglas. Los cambios y los turnos nuevos solo se comprueban para que no se solapen.')}${adm?' '+tx('Add one below.','Añade una abajo.'):''}</div>`)+`</div>`}
 function tagsCard(){const adm=ADMINS.includes(U);
@@ -1144,7 +1164,7 @@ function togMemberTag(u,id){const a=MT[u]||[],on=a.includes(id),rid=R.id;MT[u]=o
 function setRoomAdmin(u,on){if(!on&&ADMINS.length<2&&ADMINS.includes(u)){say('A room needs at least one admin.');return render()}
  ADMINS=on?[...new Set([...ADMINS,u])]:ADMINS.filter(x=>x!=u);R.admins=ADMINS;const rid=R.id;dq(()=>DB.rpc('set_room_admin',{p_room:rid,p_user:u,p_admin:on}));
  log(on?`${nm(U)} made ${nm(u)} an admin`:`${nm(U)} removed ${nm(u)} as admin`);if(on&&u!=U)notify(u,`${nm(U)} made you an admin of ${tq(R)}`);render()}
-function setRoomOpt(p){const row={},rid=R.id;if('allowSell'in p){allowSell=p.allowSell;row.allow_sell=p.allowSell}if('mode'in p){mode=p.mode;row.approval_mode=p.mode=='approval'}dq(()=>DB.from('rooms').update(row).eq('id',rid));render()}
+function setRoomOpt(p){const row={},rid=R.id;if('allowSell'in p){allowSell=p.allowSell;row.allow_sell=p.allowSell}if('mode'in p){mode=p.mode;row.approval_mode=p.mode=='approval'}dq(()=>must(DB.from('rooms').update(row).eq('id',rid)));render()}
 function setNotifyPref(v){prefs[U]=v;const me_=U;dq(()=>DB.from('profiles').update({notify_requests:v}).eq('id',me_));render()}
 function passReq(id){const r=reqs.find(x=>x.id==id);if(!r)return;r.declined.push(U);dq(()=>DB.rpc('pass_request',{p_request:id}));render()}
 function markRead(my){if(my.some(n=>!n.read)){const me_=U;dq(()=>DB.from('notifications').update({read:true}).eq('user_id',me_).eq('read',false))}my.forEach(n=>n.read=true)}
@@ -1233,14 +1253,14 @@ async function onSession(s,method){if(!s||!s.user||s.user.id==sessUid)return;
  try{await loadAll()}catch(e){say(errText(e))}
  try{const{data}=await DB.rpc('am_app_admin');IS_ADMIN=data===true}catch(e){IS_ADMIN=false}
  subscribe();track('session',{lang:LANG(),method:method||(s.user.app_metadata&&s.user.app_metadata.provider)||'email'},ME);
- screen=pw.recovery?'newpw':'home';if(pendingJoin&&!pw.recovery){jn.val=pendingJoin;pendingJoin=null;return startJoinLive()}render()}
+ screen=pw.recovery?'newpw':'home';if(pendingJoin&&!pw.recovery){jn.val=pendingJoin;pendingJoin=null;try{localStorage.removeItem('swj')}catch(e){}return startJoinLive()}render()}
 async function doAuthLive(){if(auth.busy)return;const e=auth.email.trim().toLowerCase(),reg=auth.mode=='up';auth.err='';auth.note='';auth.resend=false;
  if(reg&&!auth.name.trim()){auth.err='Tell us your name.';return render()}
  if(reg&&/[<>"&]/.test(auth.name)){auth.err=BADCH;return render()}
  if(!/^\S+@\S+\.\S+$/.test(e)){auth.err='Enter a valid email.';return render()}
  if(reg&&pwCheck(auth.pw)){auth.err=pwCheck(auth.pw);return render()}
  // busy until the answer: double clicks and Enter send one request (each sign-up mail counts against the mailer's hourly limit)
- auth.busy=true;render();let r;try{r=reg?await DB.auth.signUp({email:e,password:auth.pw,options:{data:{name:auth.name.trim(),short:shortName(auth.name),lang:LANG()},emailRedirectTo:here()}}):await DB.auth.signInWithPassword({email:e,password:auth.pw})}catch(x){r={error:x}}finally{auth.busy=false}
+ auth.busy=true;render();let r;try{r=reg?await DB.auth.signUp({email:e,password:auth.pw,options:{data:{name:auth.name.trim(),short:shortName(auth.name),lang:LANG()},emailRedirectTo:here()+(pendingJoin?(location.search?'&':'?')+'join='+encodeURIComponent(pendingJoin):'')}}):await DB.auth.signInWithPassword({email:e,password:auth.pw})}catch(x){r={error:x}}finally{auth.busy=false}
  if(r.error){const m=r.error.message||'';if(r.error.code=='email_not_confirmed'||/not confirmed/i.test(m)){auth.err='Confirm your email first: open the link we sent you.';auth.resend=true;return render()}
   auth.err=/invalid login/i.test(m)?'Wrong email or password.':/already (registered|exists)/i.test(m)?'This email already has an account. Sign in instead.':m;return render()}
  auth.pw='';if(reg)track('signup',{method:'email'});if(r.data.session)return onSession(r.data.session,'email');
@@ -1312,9 +1332,12 @@ async function loadAll(){const g=async b=>{const{data,error}=await b;if(error)th
  notifs=nt.reverse().map(n=>({id:n.id,to:n.user_id,text:n.text,imp:n.importance,sub:n.sub||'',kind:n.kind,room:n.room_id,read:n.read}));nt.forEach(n=>n.dedupe&&reminded.add(n.dedupe));
  INV=inv.map(i=>({t:i.token,room:i.room_id,by:i.created_by,exp:Date.parse(i.expires_at),uses:i.uses,revoked:i.revoked}));
  const cur=R&&R.id;R=null;const r=cur&&ROOMS.find(x=>x.id==cur);if(r)loadRoom(r);else if(screen=='room'||screen=='thread')screen='home'}
-async function boot(){if(!DB){screen='offline';return render()}
+async function boot(){try{if('serviceWorker'in navigator&&location.protocol=='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+if(!DB){screen='offline';return render()}
  if(DEMO)for(const k in DEMO_IDS){P[DEMO_IDS[k]]=P[k];AV[DEMO_IDS[k]]=AV[k]}
  try{const u=new URL(location.href),j=u.searchParams.get('join');if(j){pendingJoin=j;u.searchParams.delete('join');history.replaceState(null,'',u.toString())}}catch(e){}
+ // the invite is kept on this device until it's used, so it survives signing up, confirming the email and reloads
+ try{if(pendingJoin)localStorage.setItem('swj',JSON.stringify({t:pendingJoin,at:Date.now()}));else{const v=JSON.parse(localStorage.getItem('swj')||'null');if(v&&Date.now()-v.at<7*864e5)pendingJoin=v.t;else localStorage.removeItem('swj')}}catch(e){}
  // an expired or used email link comes back as #error=…&error_code=… (?error=… with PKCE): explain it, offer a new link, clean the URL
  let le=null;try{const u=new URL(location.href),h=new URLSearchParams(u.hash.slice(1)),g=k=>h.get(k)||u.searchParams.get(k);
   if(g('error')||g('error_code')){const old=/expired/i.test(g('error_code')+' '+g('error_description'));le={rec:g('type')=='recovery',s:old?'This email link has expired or was already used.':"This email link isn't valid."};

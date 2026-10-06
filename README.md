@@ -81,7 +81,8 @@ insert into public.app_admins (email) values ('you@example.com') on conflict (em
 
 ## Database
 
-- `supabase/migrations/`: the schema, RLS policies, realtime setup and server functions. Every file is already applied to both tenants. Apply any future migration to **both**.
+- `supabase/migrations/`: the schema, RLS policies, realtime setup and server functions. Every file is already applied to both tenants, except part of `20261014000000_fix_now.sql` (see below). Apply any future migration to **both**, and record it under its file's version (`supabase_migrations.schema_migrations`), so the history matches this folder.
+  - **Still to apply, on dev and prod:** `20261014000000_fix_now.sql` part 1 (`leave_shift()` and the policy that makes members leave shifts through it). The database tool waits for a confirmation on statements containing `delete` and timed out, so paste the whole file into the SQL editor of each project and run it. It's safe to run more than once. Until then the app falls back to the direct writes it used before.
   - `20261002000000_room_tags_and_generic_rules.sql` adds `room_tags`, `member_tags` and `room_rules`, and converts the old rules and residency years. It only adds things: the old `rules` table and the `profiles.year` column stay in place, unused. To remove them, run this once per project in the SQL editor:
     `drop table public.rules; alter table public.profiles drop column year;`
 - `supabase/seed/gen-dev-seed.mjs` generates `supabase/seed/dev_seed.sql` from the same generators the local demo uses. **Never run the seed against prod.**
@@ -111,6 +112,12 @@ What the database enforces:
   - The app can only change an offer's or a request's `status` (column privileges); everything else is changed by the server's functions.
   - Live, the app cancels a request with `cancel_request()` and withdraws an offer with `withdraw_offer()`. Every function that changes swaps locks in the same order: the room, then the request(s), then the offers, so two of them never deadlock. The previous app version's direct updates still work. Its direct cancel locks in that order too; its direct withdraw locks the offer before the request, so withdrawing the offer a swap waits on while someone else is changing that request (an admin deciding, the owner cancelling) is refused with "This offer is no longer available." instead of waiting, which could deadlock.
   - Still possible: an admin can send members of their room any text and write any activity line (their user id is recorded); a member can send roommates as many of their own name-prefixed texts as they like, with any second line; mute preferences are applied by the sender's app.
+- Fix-now audit (`20261014000000_fix_now.sql`):
+  - A completed swap closes only the requests of the people it moves off a shift. A co-worker's request on the same shift stays open with its offers.
+  - With selling turned off, new sale requests are refused and `apply_swap()` won't complete one that was already open.
+  - Admins can only update the room columns the app edits (`name`, `icon`, `bg`, `shift_type`, `allow_sell`, `approval_mode`). The time zone changes through `set_room_tz()` and deletion through `delete_room()`, which keep shifts and invite links consistent. A deleted room's invite links stop working.
+  - `leave_shift()`: a member leaves a shift only while it's still waiting for teammates, before it starts, and without breaking a rule (a headcount shortfall the shift already had may deepen). Members can't delete their own row in `shift_members` directly any more; admins still can.
+  - Usage events accept `client_error`: the app counts its own errors (the error's type only, never the message), so a broken release shows up on the dashboard.
 - The server numbers the feed (`messages.seq`, `requests.seq`) and stamps `created_at` on messages, requests, activity and usage events, whatever the client sends. `leave_room()` and `remove_member()` take the room's row lock (`for no key update`, so it doesn't block inserts that reference the room), like `set_room_admin()`, so a room always keeps an admin. `join_room()` refuses someone removed from the room when the link is older than the removal. Usage events only accept the app's event names and props keys and types (`20261012000000_server_seq_leave_rooms_event_props.sql`).
 
 ## Setup still needed in the Supabase dashboard
@@ -120,7 +127,8 @@ These settings aren't reachable through the API I used, so they need to be set b
 1. **Authentication → Emails → Templates**: paste `supabase/templates/confirmation.html` into **Confirm signup** and `recovery.html` into **Reset password**. Suggested subjects: `Confirm your Swapecito account` and `Reset your Swapecito password`. (`magic_link.html` is kept for later; the app no longer offers magic-link sign-in.) The emails greet people by name and switch to Spanish or Portuguese when the person signed up in that language. Templates pasted before Portuguese was added only know English and Spanish, so paste them again. To change them, edit `supabase/templates/build.mjs` and run `node supabase/templates/build.mjs`.
 2. **Authentication → URL Configuration**: set the Site URL to where each tenant is hosted, and add it under Redirect URLs. Confirmation and password-reset emails send people back there, so the reset link only works for addresses listed there. Until then, they land on `http://localhost:3000`.
 3. **Prod email**: Supabase's built-in mailer is rate-limited (a few emails per hour). Before real users sign up, add a custom SMTP server under **Authentication → Emails**.
-4. Prod is on the free plan, which pauses after a week without activity. Upgrade it before launch.
+4. Prod is on the free plan, which pauses after a week without activity and has no backups. Upgrade it before launch.
+5. **Backups** (until then, and as an extra copy after): `.github/workflows/backup.yml` dumps prod every Monday, encrypts it and keeps it 30 days as a workflow artifact. Add two repository secrets under **Settings → Secrets and variables → Actions**: `SUPABASE_PROD_DB_URL` (Supabase → Connect → Session pooler connection string, with the password) and `BACKUP_PASSPHRASE` (a long random passphrase; keep a copy, it's needed to restore). Run it once by hand from the Actions tab to check. The file explains how to restore.
 
 ## Accounts and passwords
 
@@ -138,7 +146,13 @@ These settings aren't reachable through the API I used, so they need to be set b
 
 ## Deploy
 
-`.github/workflows/pages.yml` publishes `index.html`, `manifest.webmanifest`, `icons/` and `vendor/` to GitHub Pages on every push to `claude/awesome-babbage-fegeqy`. The `supabase/` folder isn't deployed.
+`.github/workflows/pages.yml` publishes `index.html`, the two manifests, `sw.js`, `icons/` and `vendor/` to GitHub Pages on every push to `claude/awesome-babbage-fegeqy`. The `supabase/` folder isn't deployed.
+
+Nothing is published unless `tests/smoke.mjs` passes first: the page's script must parse, and the local demo must run a swap in English, Spanish and Portuguese without a JavaScript error. Run it locally with `node tests/smoke.mjs` before pushing.
+
+- **Installing on a phone:** a page opened with `?env=dev` installs as a separate app, "Swapecito Dev", that opens dev (`manifest-dev.webmanifest`). Installing from any other page gives the prod app.
+- **Phone notifications** only reach a device while Swapecito is open there: there's no push server yet. `sw.js` lets Android show them (it has no `new Notification`) and caches nothing.
+
 
 - Prod: https://fq-organization.github.io/ShiftSwaap/
 - Dev on the same deploy: https://fq-organization.github.io/ShiftSwaap/?env=dev

@@ -44,7 +44,7 @@ try {
 
   const p = await page(`${base}?env=local`);
   await p.click('text=Francisco'); await p.waitForTimeout(150);
-  await p.click('.room'); await p.waitForTimeout(150);
+  await p.click('.room:not(.cal)'); await p.waitForTimeout(150);
   check(await p.$('.c.today, .g .c') !== null, 'local demo: the calendar renders');
   await p.click('text=valid swap'); await p.waitForTimeout(150);
   const acc = await p.$('button.pill:has-text("Accept")');
@@ -53,9 +53,14 @@ try {
   check(/Swap confirmed/.test(await p.textContent('#app')), 'local demo: accepting the offer confirms the swap');
   for (const t of ['Feed', 'Schedule', 'Settings']) { await p.click(`.nav button:has-text("${t}")`); await p.waitForTimeout(100); }
 
+  // the personal calendar: the demo's dentist appointment clashes with a shift
+  await p.evaluate(() => { screen = 'home'; render(); }); await p.click('button.room:has-text("My calendar")'); await p.waitForTimeout(150);
+  await p.evaluate(() => { pmv = { y: 2026, m: 9 }; render(); });
+  check((await p.$$('.c.pcal.f')).length > 0, 'personal calendar: a clash with a shift is flagged');
+
   for (const [locale, word] of [['es-ES', 'Calendario'], ['pt-PT', 'Calendário']]) {
     const q = await page(`${base}?env=local`, locale);
-    await q.click('text=Francisco'); await q.waitForTimeout(150); await q.click('.room'); await q.waitForTimeout(150);
+    await q.click('text=Francisco'); await q.waitForTimeout(150); await q.click('.room:not(.cal)'); await q.waitForTimeout(150);
     check((await q.textContent('body')).includes(word), `local demo in ${locale} shows "${word}"`);
   }
 

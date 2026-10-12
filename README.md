@@ -63,6 +63,12 @@ Whoever creates a room is its first admin. Admins can make other members admins,
 
 Members leave a room in **Settings → Leave room**, once they've given their upcoming shifts to someone else. The last admin can't leave. Admins remove someone in **Settings → People → Remove from room**: that takes the person off upcoming shifts (started ones stay), cancels their open requests and offers, revokes the invite links they created and notifies them. To come back they need a link made after the removal: older links, whoever made them, don't let them in (`room_removals`). The admins are notified when someone leaves.
 
+## Personal calendar
+
+Everyone has **My calendar** (on the home screen): their own events next to their shifts from every room, so it also works for people who don't use rooms at all. Events can be timed or all-day, last up to 62 days, and have a colour. Only their owner can see them (`personal_events`, `20261015000000_personal_calendar.sql`); removing one hides it (`deleted_at`).
+
+A **clash** is an event that overlaps one of your shifts, or two of your shifts from different rooms that overlap. Clashing days have a red outline, the next clashes are listed under the month, and the home card counts them. Rooms warn too: a shift (or empty day) that clashes with your calendar says so in its sheet and in the feed before you offer to take it, and adding or taking it shows the clash. Clashes are warnings, never blocks. Events use the viewer's own time zone.
+
 ## Developer dashboard (owner only)
 
 Usage metrics: active users, sessions, sign-ups, requests, swaps, messages, the exchange funnel and per-room counts. It loads the newest 20,000 events of the last 61 days; if there are more, it says so and from which day the counts are complete. In the funnel a request counts as "Got at least one offer" once, on the day of its first offer, and the step never shows more than the requests posted. The app records counts only, never message text. Only accounts on a tenant's `app_admins` list can open the dashboard, and the database enforces this too:

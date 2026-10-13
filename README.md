@@ -63,11 +63,19 @@ Whoever creates a room is its first admin. Admins can make other members admins,
 
 Members leave a room in **Settings → Leave room**, once they've given their upcoming shifts to someone else. The last admin can't leave. Admins remove someone in **Settings → People → Remove from room**: that takes the person off upcoming shifts (started ones stay), cancels their open requests and offers, revokes the invite links they created and notifies them. To come back they need a link made after the removal: older links, whoever made them, don't let them in (`room_removals`). The admins are notified when someone leaves.
 
+## Small things that save mistakes
+
+- Removing an event, declining an offer or deleting a rule shows **Undo** for 6 seconds before it's saved. Cancelling a request and dropping your own admin role ask first.
+- A shift that's part of a swap waiting for an admin is **promised**: it can't be asked for, offered or swapped again until the admin decides.
+- A shift outlined in red says which rule it breaks. "Add me to this shift" only shows when you'd fill what's missing; otherwise the sheet says what the shift still needs.
+- CSV import keeps the rows it couldn't import in the box, with their reasons.
+- Dates in notifications, the activity log and the server's messages are stored in English and shown in each reader's language.
+
 ## Personal calendar
 
 Everyone has **My calendar** (on the home screen): their own events next to their shifts from every room, so it also works for people who don't use rooms at all. Events can be timed or all-day, last up to 62 days, and have a colour. Only their owner can see them (`personal_events`, `20261015000000_personal_calendar.sql`); removing one hides it (`deleted_at`).
 
-A **clash** is an event that overlaps one of your shifts, or two of your shifts from different rooms that overlap. Clashing days have a red outline, the next clashes are listed under the month, and the home card counts them. Rooms warn too: a shift (or empty day) that clashes with your calendar says so in its sheet and in the feed before you offer to take it, and adding or taking it shows the clash. Clashes are warnings, never blocks. Events use the viewer's own time zone.
+A **clash** is an event that overlaps one of your shifts, or two of your shifts from different rooms that overlap. Clashing days have a red outline, the next clashes are listed under the month, and the home card counts them. Rooms warn too: a shift (or empty day) that clashes with your calendar says so in its sheet and in the feed before you offer to take it, and adding or taking it shows the clash. Shifts you have in other rooms count too, so a double booking across rooms is flagged before you add, offer or accept. Clashes are warnings, never blocks. Events use the viewer's own time zone.
 
 ## Developer dashboard (owner only)
 
@@ -124,6 +132,7 @@ What the database enforces:
   - Admins can only update the room columns the app edits (`name`, `icon`, `bg`, `shift_type`, `allow_sell`, `approval_mode`). The time zone changes through `set_room_tz()` and deletion through `delete_room()`, which keep shifts and invite links consistent. A deleted room's invite links stop working.
   - `leave_shift()`: a member leaves a shift only while it's still waiting for teammates, before it starts, and without breaking a rule (a headcount shortfall the shift already had may deepen). Members can't delete their own row in `shift_members` directly any more; admins still can.
   - Usage events accept `client_error`: the app counts its own errors (the error's type only, never the message), so a broken release shows up on the dashboard.
+- Turning selling off closes the room's open sales (`20261016000000_close_sales_when_selling_off.sql`): the requests close, their offers close, and the owners and buyers are told.
 - The server numbers the feed (`messages.seq`, `requests.seq`) and stamps `created_at` on messages, requests, activity and usage events, whatever the client sends. `leave_room()` and `remove_member()` take the room's row lock (`for no key update`, so it doesn't block inserts that reference the room), like `set_room_admin()`, so a room always keeps an admin. `join_room()` refuses someone removed from the room when the link is older than the removal. Usage events only accept the app's event names and props keys and types (`20261012000000_server_seq_leave_rooms_event_props.sql`).
 
 ## Setup still needed in the Supabase dashboard

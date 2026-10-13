@@ -75,6 +75,15 @@ Members leave a room in **Settings → Leave room**, once they've given their up
 
 Calm and flat: a light background (`#f4f8fb`), white cards with one radius and one soft shadow, bold only for titles and numbers. Each month is a single white card; today is a teal circle, the selected day is tinted, and a clash keeps its red outline even when selected. In a room, phones show the avatars of who's on each day (names appear on wider screens); your own shifts are tinted. Requests that need you have an amber edge and a status chip. Inputs have a visible border, on/off settings are switches, and text sizes follow the phone's text size setting. In dev and the local demo, the "acting as" picker lives in the small DEMO strip at the top.
 
+## Wide screens, the feed and new rooms
+
+- From 1024px wide, the bottom bar becomes a sidebar, My calendar puts the month beside the next shift, clashes and the selected day, and sheets open as a centred dialog.
+- The feed reads like a chat: each message shows its time, days are separated ("Today", "Yesterday"), Reply/React appear on a long press on phones (always on screens with a mouse), and the message box grows to five lines (Enter sends, Shift+Enter adds a line).
+- A new room shows its admins a "Get your room ready" checklist (invite, tags, rules, shifts) until the steps are done or hidden. Invite links can be shared with the phone's share sheet.
+- My calendar can be exported as an .ics file for the phone's calendar app (a file, not a live subscription), and has a "Today" button when you're on another month, like the room calendar.
+- Schedule offers a CSV template in the reader's language (Portuguese and Spanish use ";" and dd/mm/yyyy).
+- In Portuguese, admins are called "responsável", and texts use neutral forms ("Avisamos-te", "Olá a todos!").
+
 ## Small things that save mistakes
 
 - Removing an event, declining an offer, cancelling a request or deleting a rule shows **Undo** for 6 seconds before it's saved. Pausing a rule (its switch) can be undone from the message too; tapping a rule's text no longer pauses it. Dropping your own admin role asks first.

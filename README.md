@@ -71,6 +71,10 @@ Members leave a room in **Settings → Leave room**, once they've given their up
 - The phone's **Back** button (and the back gesture) steps back inside the app: it closes a sheet or the reaction picker, then goes up a screen, then from Rooms to My calendar. Only from My calendar does it leave the app.
 - Buttons are at least 44 px, form fields use 16 px text so iPhones don't zoom in, and with the keyboard open the tab bar and the + button step aside and the field stays in view.
 
+## Look
+
+Calm and flat: a light background (`#f4f8fb`), white cards with one radius and one soft shadow, bold only for titles and numbers. Each month is a single white card; today is a teal circle, the selected day is tinted, and a clash keeps its red outline even when selected. In a room, phones show the avatars of who's on each day (names appear on wider screens); your own shifts are tinted. Requests that need you have an amber edge and a status chip. Inputs have a visible border, on/off settings are switches, and text sizes follow the phone's text size setting. In dev and the local demo, the "acting as" picker lives in the small DEMO strip at the top.
+
 ## Small things that save mistakes
 
 - Removing an event, declining an offer, cancelling a request or deleting a rule shows **Undo** for 6 seconds before it's saved. Pausing a rule (its switch) can be undone from the message too; tapping a rule's text no longer pauses it. Dropping your own admin role asks first.

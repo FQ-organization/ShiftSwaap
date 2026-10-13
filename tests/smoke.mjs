@@ -50,7 +50,7 @@ try {
   await p.click('text=valid swap'); await p.waitForTimeout(150);
   const acc = await p.$('button.pill:has-text("Accept")');
   check(!!acc, 'local demo: the swap scenario shows an offer');
-  if (acc) { await acc.click(); await p.waitForTimeout(150); }
+  if (acc) { await acc.click(); await p.waitForTimeout(150); const sure = await p.$('.ask [data-ok]'); if (sure) { await sure.click(); await p.waitForTimeout(150); } }
   check(/Swap confirmed/.test(await p.textContent('#app')), 'local demo: accepting the offer confirms the swap');
   for (const t of ['Feed', 'Schedule', 'Settings']) { await p.click(`.nav button:has-text("${t}")`); await p.waitForTimeout(100); }
 

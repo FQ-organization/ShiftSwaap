@@ -73,17 +73,20 @@ Members leave a room in **Settings → Leave room**, once they've given their up
 
 ## Small things that save mistakes
 
-- Removing an event, declining an offer or deleting a rule shows **Undo** for 6 seconds before it's saved. Cancelling a request and dropping your own admin role ask first.
+- Removing an event, declining an offer, cancelling a request or deleting a rule shows **Undo** for 6 seconds before it's saved. Pausing a rule (its switch) can be undone from the message too; tapping a rule's text no longer pauses it. Dropping your own admin role asks first.
+- Buying or selling a shift, and taking or accepting one that clashes with your calendar, asks for a short confirmation that says what changes hands (and that payment is agreed outside the app).
+- A swap reads as a swap: both people are told what they gave and what they now work, and whoever completes it isn't notified about their own action (`20261017000000_swap_wording.sql`).
 - A shift that's part of a swap waiting for an admin is **promised**: it can't be asked for, offered or swapped again until the admin decides.
 - A shift outlined in red says which rule it breaks. "Add me to this shift" only shows when you'd fill what's missing; otherwise the sheet says what the shift still needs.
-- CSV import keeps the rows it couldn't import in the box, with their reasons.
+- CSV import accepts commas or semicolons and dates as 2027-04-01 or 01/04/2027, previews as you type, lists each rule warning, and keeps the rows it couldn't import in the box, with their reasons.
+- Notifications say how long ago they arrived, and list first what needs your answer (offers to review, requests you can take, swaps to approve); tapping one opens the request in its room's feed.
 - Dates in notifications, the activity log and the server's messages are stored in English and shown in each reader's language.
 
 ## Personal calendar
 
-The app opens on **My calendar**. The home screen has two tabs at the bottom, **My calendar** and **Rooms** (next shifts and the rooms), and coming back from a room returns to the tab you left. Everyone has My calendar: their own events next to their shifts from every room, so it also works for people who don't use rooms at all. Events can be timed or all-day, last up to 62 days, and have a colour. Only their owner can see them (`personal_events`, `20261015000000_personal_calendar.sql`); removing one hides it (`deleted_at`).
+The app opens on **My calendar**. The home screen has two tabs at the bottom, **My calendar** and **Rooms** (your rooms), and coming back from a room returns to the tab you left. Everyone has My calendar: their own events next to their shifts from every room, so it also works for people who don't use rooms at all. Events can be timed or all-day, last up to 62 days, and have a colour. Only their owner can see them (`personal_events`, `20261015000000_personal_calendar.sql`); removing one hides it (`deleted_at`).
 
-A **clash** is an event that overlaps one of your shifts, or two of your shifts from different rooms that overlap. Clashing days have a red outline, the next clashes are listed under the month, and the home card counts them. Rooms warn too: a shift (or empty day) that clashes with your calendar says so in its sheet and in the feed before you offer to take it, and adding or taking it shows the clash. Shifts you have in other rooms count too, so a double booking across rooms is flagged before you add, offer or accept. Clashes are warnings, never blocks. Events use the viewer's own time zone.
+A **clash** is an event that overlaps one of your shifts, or two of your shifts from different rooms that overlap. Clashing days have a red outline, the next shift and the number of coming clashes sit above the month, and the clashes are listed under it. A month with nothing in it points to the next month that has something. 24-hour shifts read as "Thu 08:00 → Fri 08:00 (24 h)", and the day after says the shift continues. Rooms warn too: a shift (or empty day) that clashes with your calendar says so in its sheet and in the feed before you offer to take it, and adding or taking it shows the clash. Shifts you have in other rooms count too, so a double booking across rooms is flagged before you add, offer or accept. Clashes are warnings, never blocks. Events use the viewer's own time zone.
 
 ## Developer dashboard (owner only)
 

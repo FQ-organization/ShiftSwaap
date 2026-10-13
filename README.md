@@ -73,7 +73,7 @@ Members leave a room in **Settings → Leave room**, once they've given their up
 
 ## Personal calendar
 
-Everyone has **My calendar** (on the home screen): their own events next to their shifts from every room, so it also works for people who don't use rooms at all. Events can be timed or all-day, last up to 62 days, and have a colour. Only their owner can see them (`personal_events`, `20261015000000_personal_calendar.sql`); removing one hides it (`deleted_at`).
+The app opens on **My calendar**. The home screen has two tabs at the bottom, **My calendar** and **Rooms** (next shifts and the rooms), and coming back from a room returns to the tab you left. Everyone has My calendar: their own events next to their shifts from every room, so it also works for people who don't use rooms at all. Events can be timed or all-day, last up to 62 days, and have a colour. Only their owner can see them (`personal_events`, `20261015000000_personal_calendar.sql`); removing one hides it (`deleted_at`).
 
 A **clash** is an event that overlaps one of your shifts, or two of your shifts from different rooms that overlap. Clashing days have a red outline, the next clashes are listed under the month, and the home card counts them. Rooms warn too: a shift (or empty day) that clashes with your calendar says so in its sheet and in the feed before you offer to take it, and adding or taking it shows the clash. Shifts you have in other rooms count too, so a double booking across rooms is flagged before you add, offer or accept. Clashes are warnings, never blocks. Events use the viewer's own time zone.
 

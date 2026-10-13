@@ -63,6 +63,14 @@ Whoever creates a room is its first admin. Admins can make other members admins,
 
 Members leave a room in **Settings → Leave room**, once they've given their upcoming shifts to someone else. The last admin can't leave. Admins remove someone in **Settings → People → Remove from room**: that takes the person off upcoming shifts (started ones stay), cancels their open requests and offers, revokes the invite links they created and notifies them. To come back they need a link made after the removal: older links, whoever made them, don't let them in (`room_removals`). The admins are notified when someone leaves.
 
+## On phones
+
+- My calendar shows coloured dots per day on narrow screens (a square for a shift, a dot per event); tapping a day lists it under the month, and with no day chosen the list shows what's coming up. Swipe left or right on a month to change it (in My calendar and in a room's calendar).
+- A round **+** button sits in reach of the thumb: a new event in My calendar, the Schedule tab in a room.
+- Sheets open over a dimmed backdrop; tap the backdrop or drag the sheet down by its top to close it.
+- The phone's **Back** button (and the back gesture) steps back inside the app: it closes a sheet or the reaction picker, then goes up a screen, then from Rooms to My calendar. Only from My calendar does it leave the app.
+- Buttons are at least 44 px, form fields use 16 px text so iPhones don't zoom in, and with the keyboard open the tab bar and the + button step aside and the field stays in view.
+
 ## Small things that save mistakes
 
 - Removing an event, declining an offer or deleting a rule shows **Undo** for 6 seconds before it's saved. Cancelling a request and dropping your own admin role ask first.

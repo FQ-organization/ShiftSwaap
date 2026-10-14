@@ -181,7 +181,7 @@ These settings aren't reachable through the API I used, so they need to be set b
 
 ## App icon
 
-`icons/icon.svg` is the source. `icons/icon-full.svg` (iPhone) and `icons/icon-maskable.svg` (Android, which may crop to a circle) are the same drawing on a full square background. The PNGs (`favicon-32`, `apple-touch-icon` 180 px, `icon-192`, `icon-512`, `icon-maskable-512`) are exported from them. `manifest.webmanifest` makes the site installable on a phone's home screen. The login screen draws the icon inline, and the emails load `icon-192.png` from the deployed site.
+`icons/icon.svg` is the source: two swap arrows, teal and orange, on a dark navy square. `icons/icon-full.svg` (iPhone) and `icons/icon-maskable.svg` (Android, which may crop to a circle) are the same drawing on a full square background. The PNGs (`favicon-32`, `apple-touch-icon` 180 px, `icon-192`, `icon-512`, `icon-maskable-512`) are exported from them. `manifest.webmanifest` makes the site installable on a phone's home screen. The login screen draws the icon inline, and the emails load `icon-192.png` from the deployed site.
 
 ## Deploy
 

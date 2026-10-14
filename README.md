@@ -86,6 +86,10 @@ The app keeps words to a minimum: no screen titles that repeat the tab, no helpe
 - Schedule offers a CSV template in the reader's language (Portuguese and Spanish use ";" and dd/mm/yyyy).
 - In Portuguese, admins are called "responsável", and texts use neutral forms ("Avisamos-te", "Olá a todos!").
 
+### Swap cards
+
+A request shows the swap as a picture: each shift is a small calendar page (weekday, day, month) with the face of who works it, and two arrows between the two pages. "Ana quer trocar" with Ana's page and Diogo's page reads "Ana's Friday for Diogo's Sunday"; a sale or a shift taken as is shows one arrow to the person's face, with the price in green. Below, only what's needed: Accept / Decline, Propose swap and the days you can give, a clock while it waits, ⚠ when it clashes with your calendar.
+
 ## Small things that save mistakes
 
 - Removing an event, declining an offer, cancelling a request or deleting a rule shows **Undo** for 6 seconds before it's saved. Pausing a rule (its switch) can be undone from the message too; tapping a rule's text no longer pauses it. Dropping your own admin role asks first.

@@ -48,7 +48,7 @@ try {
   await p.click('.nav button:nth-child(2)'); await p.click('.room:not(.cal)'); await p.waitForTimeout(150);
   check(await p.$('.c.today, .g .c') !== null, 'local demo: the calendar renders');
   await p.click('text=valid swap'); await p.waitForTimeout(150);
-  const acc = await p.$('button.pill:has-text("Accept")');
+  const acc = await p.$('.pn.req .ib.yes');
   check(!!acc, 'local demo: the swap scenario shows an offer');
   if (acc) { await acc.click(); await p.waitForTimeout(150); const sure = await p.$('.ask [data-ok]'); if (sure) { await sure.click(); await p.waitForTimeout(150); } }
   check(/Swap confirmed/.test(await p.textContent('#app')), 'local demo: accepting the offer confirms the swap');

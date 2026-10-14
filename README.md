@@ -75,6 +75,8 @@ Members leave a room in **Settings → Leave room**, once they've given their up
 
 Calm and flat: a light background (`#f4f8fb`), white cards with one radius and one soft shadow, bold only for titles and numbers. Each month is a single white card; today is a teal circle, the selected day is tinted, and a clash keeps its red outline even when selected. In a room, phones show the avatars of who's on each day (names appear on wider screens); your own shifts are tinted. Requests that need you have an amber edge and a status chip. Inputs have a visible border, on/off settings are switches, and text sizes follow the phone's text size setting. In dev and the local demo, the "acting as" picker lives in the small DEMO strip at the top.
 
+The app keeps words to a minimum: no screen titles that repeat the tab, no helper sentences under every row, room settings rows show only their name, the room header shows only the room, and invitations and the next shift fit on one line. Rooms on the event form are plain name chips, and guests are small name chips.
+
 ## Wide screens, the feed and new rooms
 
 - From 1024px wide, the bottom bar becomes a sidebar, My calendar puts the month beside the next shift, clashes and the selected day, and sheets open as a centred dialog.

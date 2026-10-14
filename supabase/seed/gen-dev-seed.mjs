@@ -48,6 +48,8 @@ w(`insert into auth.identities (id, user_id, provider_id, identity_data, provide
 select gen_random_uuid(), id, id::text, jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true), 'email', now(), now(), now()
 from auth.users where id in (${users.map(u => lit(u.id)).join(', ')});`);
 w(`update public.profiles p set avatar = (u->>'avatar')::int from jsonb_array_elements(${lit(JSON.stringify(users.map(u => ({ id: u.id, avatar: u.avatar }))))}::jsonb) u where p.id = (u->>'id')::uuid;`);
+// @handles (see 20261018000000_shared_events.sql): the first name, lowercase and without accents
+w(`update public.profiles p set handle = u->>'h' from jsonb_array_elements(${lit(JSON.stringify(users.map(u => ({ id: u.id, h: u.name.split(' ')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() }))))}::jsonb) u where p.id = (u->>'id')::uuid;`);
 
 const rooms = [
   { key: 'em', name: 'Emergency Medicine', icon: '🚑', bg: '#dff0ff', type: 'Emergency 24h', members: ORDER, admins: ['M'], shifts: makeS(), by: 'M', welcome: 'Welcome! Post shift changes here and colleagues who can help will be notified 👋',

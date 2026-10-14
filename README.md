@@ -101,6 +101,14 @@ The app opens on **My calendar**. The home screen has two tabs at the bottom, **
 
 A **clash** is an event that overlaps one of your shifts, or two of your shifts from different rooms that overlap. Clashing days have a red outline, the next shift and the number of coming clashes sit above the month, and the clashes are listed under it. A month with nothing in it points to the next month that has something. 24-hour shifts read as "Thu 08:00 → Fri 08:00 (24 h)", and the day after says the shift continues. Rooms warn too: a shift (or empty day) that clashes with your calendar says so in its sheet and in the feed before you offer to take it, and adding or taking it shows the clash. Shifts you have in other rooms count too, so a double booking across rooms is flagged before you add, offer or accept. Clashes are warnings, never blocks. Events use the viewer's own time zone.
 
+### Shared events and @handles
+
+Everyone has an **@handle** (3 to 20 lowercase letters, numbers, dots or underscores, unique). After signing in, people without one pick it first (a suggestion is made from their name); it can be changed in the profile. The demo accounts use their first name (`@maria`, `@francisco`…).
+
+When adding or editing one of their events, people can **invite others by @handle** (exact match only, so handles can't be listed or searched). Guests see the invitation at the top of My calendar and in Notifications, with Accept and Decline; an accepted event shows in their calendar too and counts for clashes, with "with <organiser>". Only the organiser edits the event; a guest who's going can say "I'm not going". The organiser sees who's going (✓) and who hasn't answered (⏳), can take people off the list, and removing the event tells the guests. Up to 50 guests per event.
+
+Database: `profiles.handle`, `event_guests` (status `pending`, `accepted`, `declined` or `removed`; rows are never removed), and the functions `set_handle`, `find_person`, `event_people`, `invite_to_event`, `remove_event_guest` and `respond_event` (`20261018000000_shared_events.sql`). Guests can read the events they're invited to; nobody else can. **Still to run in the SQL editor on dev and prod:** part 2 of that file, which makes guest rows go with a removed account.
+
 ## Developer dashboard (owner only)
 
 Usage metrics: active users, sessions, sign-ups, requests, swaps, messages, the exchange funnel and per-room counts. It loads the newest 20,000 events of the last 61 days; if there are more, it says so and from which day the counts are complete. In the funnel a request counts as "Got at least one offer" once, on the day of its first offer, and the step never shows more than the requests posted. The app records counts only, never message text. Only accounts on a tenant's `app_admins` list can open the dashboard, and the database enforces this too:

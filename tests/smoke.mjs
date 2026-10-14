@@ -33,8 +33,9 @@ const base = `http://localhost:${server.address().port}/index.html`;
 const browser = await pw.chromium.launch();
 try {
   const errors = [];
-  const page = async (url, locale = 'en-GB') => {
+  const page = async (url, locale = 'en-GB', firstRun = false) => {
     const ctx = await browser.newContext({ locale, timezoneId: 'Europe/Lisbon' });
+    if (!firstRun) await ctx.addInitScript(() => { try { localStorage.setItem('swapecito.onb', '1'); } catch (e) {} });
     const p = await ctx.newPage(); p.setDefaultTimeout(5000);
     p.on('pageerror', e => errors.push(`${url} [${locale}]: ${e.message}`));
     await p.route(/supabase|googleapis|jsdelivr/, r => r.abort());
@@ -63,6 +64,15 @@ try {
     const q = await page(`${base}?env=local`, locale);
     await q.click('text=Francisco'); await q.waitForTimeout(150); await q.click('.nav button:nth-child(2)'); await q.click('.room:not(.cal)'); await q.waitForTimeout(150);
     check((await q.textContent('body')).includes(word), `local demo in ${locale} shows "${word}"`);
+  }
+
+  // the first run shows three short screens, and Skip closes them
+  {
+    const q = await page(`${base}?env=local`, 'en-GB', true);
+    await q.click('text=Francisco'); await q.waitForTimeout(500);
+    const shown = !!(await q.$('.onb'));
+    if (shown) { await q.click('.onb [data-s]'); await q.waitForTimeout(100); }
+    check(shown && !(await q.$('.onb')), 'first run: the welcome screens show and can be skipped');
   }
 
   // dev and prod with the backend unreachable: a clear message, no crash

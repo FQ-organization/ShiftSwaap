@@ -90,6 +90,18 @@ The app keeps words to a minimum: no screen titles that repeat the tab, no helpe
 
 A request shows the swap as a picture: each shift is a small calendar page (weekday, day, month) with the face of who works it, and two arrows between the two pages. "Ana quer trocar" with Ana's page and Diogo's page reads "Ana's Friday for Diogo's Sunday"; a sale or a shift taken as is shows one arrow to the person's face, with the price in green. Below, only what's needed: Accept / Decline, Propose swap and the days you can give, a clock while it waits, ⚠ when it clashes with your calendar.
 
+### Calendar views, navigation and the rest
+
+- **My calendar** has three views (remembered per device): **Month** (on phones, a coloured bar per room and per event; a 24 h shift runs into the next day), **Week** (seven columns with the hours, blocks for shifts and events, overlaps outlined in red, a line for now) and **Agenda** (a timeline grouped by Today, Tomorrow and dates). Coming up and the day panel use the same timeline rows.
+- **One bar everywhere:** Calendar, Rooms, Alerts and Profile, with badges. Inside a room, its sections (Calendar, Feed, Schedule, Settings) are a switch at the top.
+- **Room calendar:** filter chips (All, Mine, I can take, Requests) double as the legend; days show the state colour, my face on my days and dots for the others; All shows everyone.
+- **Asking for a swap or sale:** a preview of the request, the reason as icon chips, urgency as three coloured buttons, and the faces of who can take it.
+- **Schedule:** pick several days on a small month and add them in one go (admins choose who); the CSV import sits behind "Import a file".
+- **Rooms:** each room shows your next days as small calendar pages; one + creates or joins a room.
+- **Profile:** a header card and rows that open in place (my information, reminders, language, password).
+- **First run:** three short screens (calendar, rooms, swaps) with Skip; seen once per device.
+- **Dark mode** follows the phone. A swap that goes through animates the two pages trading places; screens fade in; loading shows skeleton cards.
+
 ## Small things that save mistakes
 
 - Removing an event, declining an offer, cancelling a request or deleting a rule shows **Undo** for 6 seconds before it's saved. Pausing a rule (its switch) can be undone from the message too; tapping a rule's text no longer pauses it. Dropping your own admin role asks first.

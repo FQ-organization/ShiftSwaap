@@ -44,7 +44,7 @@ try {
 
   const p = await page(`${base}?env=local`);
   await p.click('text=Francisco'); await p.waitForTimeout(150);
-  check((await p.$$('.c.pcal')).length > 0 && /My calendar/.test(await p.textContent('#app')), 'the app opens on My calendar');
+  check((await p.$$('.c.pcal')).length > 0 && (await p.$('.nav button:nth-child(1).on')) !== null, 'the app opens on My calendar');
   await p.click('.nav button:nth-child(2)'); await p.click('.room:not(.cal)'); await p.waitForTimeout(150);
   check(await p.$('.c.today, .g .c') !== null, 'local demo: the calendar renders');
   await p.click('text=valid swap'); await p.waitForTimeout(150);
@@ -52,10 +52,10 @@ try {
   check(!!acc, 'local demo: the swap scenario shows an offer');
   if (acc) { await acc.click(); await p.waitForTimeout(150); const sure = await p.$('.ask [data-ok]'); if (sure) { await sure.click(); await p.waitForTimeout(150); } }
   check(/Swap confirmed/.test(await p.textContent('#app')), 'local demo: accepting the offer confirms the swap');
-  for (const t of ['Feed', 'Schedule', 'Settings']) { await p.click(`.nav button:has-text("${t}")`); await p.waitForTimeout(100); }
+  for (const t of ['Feed', 'Schedule', 'Settings']) { await p.click(`.rtabs button[aria-label="${t}"]`); await p.waitForTimeout(100); }
 
   // the personal calendar: the demo's dentist appointment clashes with a shift
-  await p.click('button.back'); await p.waitForTimeout(150); await p.click('.nav button:has-text("My calendar")'); await p.waitForTimeout(150);
+  await p.click('.nav button:nth-child(1)'); await p.waitForTimeout(150);
   await p.evaluate(() => { pmv = { y: 2026, m: 9 }; render(); });
   check((await p.$$('.c.pcal.f')).length > 0, 'personal calendar: a clash with a shift is flagged');
 

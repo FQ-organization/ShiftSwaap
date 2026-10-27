@@ -231,7 +231,7 @@ label.r input[type=checkbox]:checked{background:var(--acc)}label.r input[type=ch
 .snum{width:28px;height:28px;border-radius:50%;background:var(--accs);color:var(--accd);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;flex:none}.srow.done{color:var(--mut)}.srow.done .snum{background:var(--mint);color:var(--mi)}
 .today-b{font-size:.875rem;padding:2px 8px;margin-left:4px}
 @media(min-width:1024px){
- main{max-width:1240px;padding-left:272px;padding-right:24px}
+ main{max-width:1180px;padding-left:32px;padding-right:32px}body:has(.nav){padding-left:240px}
  .nav{left:0;top:0;bottom:0;right:auto;width:240px;max-width:none;margin:0;flex-direction:column;justify-content:flex-start;gap:4px;border-radius:0;padding:88px 12px 16px;box-shadow:1px 0 0 var(--line)}
  .nav:before{content:"Swapecito";position:absolute;top:28px;left:24px;font-weight:800;font-size:1.25rem;color:var(--accd)}
  .nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;padding:8px 12px;font-size:1rem;border-radius:14px}.nav button span{width:40px;height:32px}.nav button.on{background:var(--accs)}.nav .bdg{left:36px}
@@ -369,6 +369,7 @@ h1,.top h1,.hi h1{font-size:1.125rem}.mo{margin:16px 6px 8px}.mo b{font-size:1.0
 .onbdots{display:flex;gap:6px;justify-content:center;margin-bottom:8px}.onbdots i{width:8px;height:8px;border-radius:50%;background:var(--edge)}.onbdots i.on{background:var(--accd);width:22px;border-radius:4px}
 .onb .acts{justify-content:center;flex-direction:column}.onb .pill{width:100%}
 .prow,.csvd{display:block!important}.prow>label.r{margin-top:6px}
+@media(min-width:1024px){.nav{padding-top:88px}body:has(.nav) .toast{left:256px;right:16px}body:has(.nav) .fab{right:max(24px,calc((100vw - 240px)/2 - 560px))}body:not(:has(.nav)) .sheet{left:50%}body:not(:has(.nav)) .toast{left:16px}}
 </style></head><body><main id="app"></main><script src="vendor/supabase-js-2.117.2.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok"></script><script>
 // the app icon (icons/icon.svg), inline so the login screen needs no extra request
 const APP_ICON='<svg aria-hidden="true" viewBox="0 0 512 512"><defs><linearGradient id="swg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#20313f"/><stop offset="1" stop-color="#0f1c26"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#swg)"/><g fill="none" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"><path stroke="#3cc6d6" d="M128 240a128 128 0 0 1 222-86"/><path stroke="#3cc6d6" d="M358 98v66h-66"/><path stroke="#ffa257" d="M384 272a128 128 0 0 1-222 86"/><path stroke="#ffa257" d="M154 414v-66h66"/></g></svg>';
